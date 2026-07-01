@@ -1,0 +1,30 @@
+{
+  "name": "Clips Tracking",
+  "short_name": "ClipsTrack",
+  "description": "Kelola ide, tulis draft, dan tracking konten clip video kamu",
+  "id": "clips-tracking-v1",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#080810",
+  "theme_color": "#080810",
+  "categories": ["productivity", "utilities"],
+  "lang": "id",
+  "icons": [
+    {
+      "src": "192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "192.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [],
+  "prefer_related_applications": false
+}

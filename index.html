@@ -1,0 +1,2347 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover,interactive-widget=resizes-content">
+<meta name="theme-color" content="#080810" id="meta-theme">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Clips Tracking">
+<link rel="manifest" href="manifest.json">
+<title>Clips Tracking</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none}
+:root{
+  --bg:#080810;--s1:#0f0f1a;--s2:#161623;--s3:#1e1e2e;--s4:#26263a;
+  --b1:rgba(255,255,255,.05);--b2:rgba(255,255,255,.09);--b3:rgba(255,255,255,.15);
+  --t1:#f0f0ff;--t2:#8080aa;--t3:#3e3e58;
+  --ac:#5b6ef5;--ac2:#7c8fff;--acg:rgba(91,110,245,.18);
+  --gr:#2db87a;--grg:rgba(45,184,122,.12);
+  --am:#e8a020;--amg:rgba(232,160,32,.12);
+  --rd:#e05555;--rdg:rgba(224,85,85,.12);
+  --pu:#9b6ef5;--pug:rgba(155,110,245,.12);
+  --cy:#22c0d8;--cyg:rgba(34,192,216,.12);
+  --pk:#e8609e;--pkg:rgba(232,96,158,.12);
+  --or:#f0762e;--org:rgba(240,118,46,.12);
+  --nav:60px;--sab:env(safe-area-inset-bottom,0px);
+  --r:16px;--rsm:12px;--rxs:8px
+}
+html.light{
+  --bg:#f4f4f8;--s1:#ffffff;--s2:#ededf2;--s3:#e4e4ec;--s4:#d8d8e4;
+  --b1:rgba(0,0,0,.07);--b2:rgba(0,0,0,.11);--b3:rgba(0,0,0,.18);
+  --t1:#12121e;--t2:#5a5a78;--t3:#a0a0bc;
+  --ac:#4a5ce0;--ac2:#4a5ce0;--acg:rgba(74,92,224,.12);
+  --gr:#1ea368;--grg:rgba(30,163,104,.1);
+  --am:#c97a10;--amg:rgba(201,122,16,.1);
+  --rd:#c93d3d;--rdg:rgba(201,61,61,.1);
+  --pu:#7a52d8;--pug:rgba(122,82,216,.1);
+  --cy:#0da0b8;--cyg:rgba(13,160,184,.1);
+  --pk:#c8467f;--pkg:rgba(200,70,127,.1);
+  --or:#d05f1c;--org:rgba(208,95,28,.1)
+}
+*{transition:background-color .22s,border-color .22s,color .18s,box-shadow .22s}
+button,input,textarea,select{transition:background-color .22s,border-color .22s,color .18s !important}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--t1);font-family:'Plus Jakarta Sans',sans-serif;-webkit-font-smoothing:antialiased;overscroll-behavior:none}
+button,a{touch-action:manipulation}
+/* App-wide: teks tidak bisa di-select/blok, kecuali di area yang memang punya fitur edit (notes, judul, caption, input form) */
+*{user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+input[type=text],input[type=number],input[type=datetime-local],input[type=time],textarea{
+  user-select:text;-webkit-user-select:text;-webkit-touch-callout:default
+}
+#nv-body,#nv-body *{user-select:text;-webkit-user-select:text;-webkit-touch-callout:default}
+.seltext{user-select:text;-webkit-user-select:text;-webkit-touch-callout:default}
+::-webkit-scrollbar{width:2px;height:2px}
+::-webkit-scrollbar-thumb{background:var(--b2);border-radius:4px}
+#app{height:100dvh;display:flex;flex-direction:column;overflow:hidden}
+
+/* TOPBAR */
+#topbar{
+  padding:12px 16px 10px;display:flex;align-items:center;
+  border-bottom:1px solid var(--b1);background:var(--bg);flex-shrink:0;z-index:20;
+  gap:8px;min-height:54px
+}
+.logo{font-size:16px;font-weight:800;letter-spacing:-.4px;white-space:nowrap;flex-shrink:0}
+.logo b{color:var(--ac2)}
+.tbar-r{display:flex;align-items:center;gap:6px;flex-shrink:0}
+.ib{
+  width:34px;height:34px;border-radius:var(--rxs);background:var(--s2);
+  border:1px solid var(--b1);display:flex;align-items:center;justify-content:center;
+  cursor:pointer;color:var(--t2);transition:all .15s;flex-shrink:0
+}
+.ib:active{background:var(--s3);color:var(--t1)}
+.ib svg{width:16px;height:16px}
+
+/* PAGES */
+.page{flex:1;overflow-y:auto;overflow-x:hidden;display:none;padding-bottom:calc(var(--nav) + var(--sab) + 12px)}
+.page.act{display:block;animation:fup .22s ease}
+@keyframes fup{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* BOTTOM NAV */
+#nav{
+  position:fixed;bottom:0;left:0;right:0;
+  height:calc(var(--nav) + var(--sab));padding-bottom:var(--sab);
+  background:rgba(8,8,16,.95);backdrop-filter:blur(24px);
+  border-top:1px solid var(--b1);display:flex;align-items:stretch;z-index:100
+}
+.nb{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:4px;background:none;border:none;cursor:pointer;color:var(--t3);
+  font-family:'Plus Jakarta Sans',sans-serif;font-size:10px;font-weight:700;
+  letter-spacing:.2px;padding:6px 4px;position:relative;transition:color .18s
+}
+.nb.act{color:var(--ac2)}
+.nb.act::after{
+  content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);
+  width:20px;height:2px;background:var(--ac2);border-radius:0 0 4px 4px
+}
+.nb svg{width:20px;height:20px}
+
+/* FAB */
+#fab{
+  position:fixed;bottom:calc(var(--nav) + var(--sab) + 14px);right:16px;
+  width:48px;height:48px;border-radius:14px;background:var(--ac);
+  color:#fff;border:none;cursor:pointer;display:flex;align-items:center;
+  justify-content:center;box-shadow:0 6px 24px var(--acg);z-index:50;transition:all .18s
+}
+#fab:active{transform:scale(.92)}
+#fab.hidden{opacity:0;pointer-events:none;transform:scale(.85) translateY(8px)}
+#fab svg{width:22px;height:22px}
+
+/* TOAST */
+#toast{
+  position:fixed;bottom:calc(var(--nav) + var(--sab) + 72px);
+  left:50%;transform:translateX(-50%) translateY(6px);
+  background:var(--s4);color:var(--t1);padding:10px 18px;
+  border-radius:var(--rsm);font-size:13px;font-weight:600;
+  white-space:nowrap;z-index:9999;opacity:0;pointer-events:none;
+  transition:opacity .2s,transform .2s;border:1px solid var(--b2);
+  box-shadow:0 8px 32px rgba(0,0,0,.6);display:flex;align-items:center
+}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* OVERLAY / SHEET */
+.ov{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.75);backdrop-filter:blur(8px);display:none;align-items:flex-end}
+#ov-confirm{z-index:400}
+#ov-frame{z-index:500}
+.ov.open{display:flex;animation:fi .18s ease}
+@keyframes fi{from{opacity:0}to{opacity:1}}
+.sheet{
+  width:100%;max-height:93dvh;overflow-y:auto;
+  background:var(--s1);border-radius:24px 24px 0 0;
+  border-top:1px solid var(--b2);
+  animation:su .28s cubic-bezier(.34,1.3,.64,1);
+  padding-bottom:calc(24px + var(--sab))
+}
+@keyframes su{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.sh-handle{width:32px;height:3px;background:var(--b3);border-radius:2px;margin:12px auto 0;cursor:grab}
+.sh-title{font-size:18px;font-weight:800;padding:16px 20px 0;margin-bottom:16px;letter-spacing:-.3px}
+.sh-body{padding:0 20px 4px}
+
+/* FULLSCREEN MODAL */
+.fsm{position:fixed;inset:0;z-index:300;background:var(--bg);overflow-y:auto;display:none;padding-bottom:calc(20px + var(--sab))}
+.fsm.open{display:block;animation:fup .22s ease}
+.fsm-hd{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 16px;border-bottom:1px solid var(--b1);
+  position:sticky;top:0;background:var(--bg);z-index:10;gap:10px
+}
+
+/* FORMS */
+.fg{margin-bottom:16px}
+.fg label{font-size:10px;font-weight:700;color:var(--t3);letter-spacing:.8px;text-transform:uppercase;display:block;margin-bottom:6px}
+input[type=text],input[type=number],input[type=datetime-local],input[type=time],textarea,select{
+  width:100%;background:var(--s2);border:1px solid var(--b1);border-radius:var(--rxs);
+  color:var(--t1);font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;
+  padding:11px 14px;outline:none;transition:border .15s,background .15s;-webkit-appearance:none;appearance:none
+}
+input:focus,textarea:focus,select:focus{border-color:var(--ac);background:var(--s3)}
+textarea{resize:none;min-height:90px;line-height:1.6}
+select option{background:var(--s2)}
+
+/* BUTTONS */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  padding:11px 16px;border-radius:var(--rxs);border:none;cursor:pointer;
+  font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:13px;
+  transition:all .15s;white-space:nowrap
+}
+.btn-p{background:var(--ac);color:#fff}
+.btn-p:active{opacity:.85;transform:scale(.97)}
+.btn-g{background:var(--s2);color:var(--t2);border:1px solid var(--b1)}
+.btn-g:active{background:var(--s3)}
+.btn-d{background:var(--rdg);color:var(--rd);border:1px solid rgba(224,85,85,.2)}
+.btn-sm{padding:8px 13px;font-size:12px}
+.btn-xs{padding:5px 10px;font-size:11px}
+.btn-w{width:100%}
+.row2{display:flex;gap:10px;margin-top:6px}
+
+/* TAGS */
+.tag{display:inline-flex;align-items:center;gap:3px;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700}
+.tag-gr{background:var(--grg);color:var(--gr);border:1px solid rgba(45,184,122,.25)}
+.tag-am{background:var(--amg);color:var(--am);border:1px solid rgba(232,160,32,.25)}
+.tag-ac{background:var(--acg);color:var(--ac2);border:1px solid rgba(91,110,245,.25)}
+.tag-pu{background:var(--pug);color:var(--pu);border:1px solid rgba(155,110,245,.25)}
+.tag-cy{background:var(--cyg);color:var(--cy);border:1px solid rgba(34,192,216,.25)}
+.tag-rd{background:var(--rdg);color:var(--rd);border:1px solid rgba(224,85,85,.25)}
+.tag-pk{background:var(--pkg);color:var(--pk);border:1px solid rgba(232,96,158,.25)}
+.tag-or{background:var(--org);color:var(--or);border:1px solid rgba(240,118,46,.25)}
+.tag-mu{background:var(--s3);color:var(--t2);border:1px solid var(--b1)}
+
+/* CHECKBOX */
+.chk{
+  width:20px;height:20px;min-width:20px;border-radius:6px;
+  border:1.5px solid var(--b2);background:var(--s2);
+  display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s
+}
+.chk.on{background:var(--ac);border-color:var(--ac)}
+.chk svg{display:none;width:11px;height:11px;color:#fff;stroke-width:3}
+.chk.on svg{display:block}
+
+/* MISC */
+.divider{height:1px;background:var(--b1);margin:14px 0}
+.sec-lbl{font-size:10px;font-weight:700;color:var(--t3);letter-spacing:.8px;text-transform:uppercase;margin-bottom:10px}
+.empty{text-align:center;padding:56px 24px;color:var(--t3)}
+.empty svg{width:40px;height:40px;margin-bottom:14px;opacity:.3;display:block;margin-left:auto;margin-right:auto}
+.empty p{font-size:14px;line-height:1.7;color:var(--t2)}
+.pw{background:var(--s3);border-radius:4px;height:4px;overflow:hidden}
+.pb{height:100%;border-radius:4px;background:var(--ac);transition:width .4s}
+.pb.full{background:var(--gr)}
+.mono{font-family:'DM Mono',monospace}
+
+/* ══ THUMB ZONE (form add/edit) ══ */
+.thumb-row{
+  display:flex;align-items:center;gap:12px;
+  background:var(--s2);border:1px solid var(--b1);
+  border-radius:var(--rsm);padding:12px;
+  transition:border .15s
+}
+.thumb-preview{
+  width:52px;height:68px;border-radius:8px;
+  background:var(--s3);border:1px solid var(--b1);
+  overflow:hidden;display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;position:relative
+}
+.thumb-preview img{width:100%;height:100%;object-fit:cover;display:none}
+.thumb-preview .tp-ico{color:var(--t3)}
+.thumb-preview .tp-ico svg{width:22px;height:22px}
+.thumb-meta{flex:1;min-width:0}
+.thumb-meta-title{font-size:13px;font-weight:700;color:var(--t2);margin-bottom:4px}
+.thumb-meta-sub{font-size:11px;color:var(--t3);line-height:1.5}
+.thumb-actions{display:flex;flex-direction:column;gap:6px;flex-shrink:0}
+.thumb-actions .btn{padding:7px 12px;font-size:11px}
+
+/* Frame picker overlay */
+#ov-frame .sheet{max-height:88dvh}
+.frame-inner{padding:0 20px 4px}
+.frame-canvas-wrap{
+  width:100%;aspect-ratio:3/4;max-height:52vh;
+  border-radius:var(--rsm);overflow:hidden;background:var(--s3);
+  display:flex;align-items:center;justify-content:center;margin-bottom:14px
+}
+#frame-canvas{display:block;width:100%;height:100%;object-fit:contain;background:var(--s2)}
+#frame-video{display:none}
+.frame-slider-wrap{margin-bottom:16px}
+.frame-slider-lbl{font-size:10px;font-weight:700;color:var(--t3);letter-spacing:.8px;text-transform:uppercase;margin-bottom:8px}
+.frame-slider{
+  width:100%;-webkit-appearance:none;appearance:none;
+  height:4px;border-radius:2px;background:var(--b2);outline:none;cursor:pointer
+}
+.frame-slider::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;background:var(--ac);cursor:pointer;border:2px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.4)}
+.frame-slider::-moz-range-thumb{width:22px;height:22px;border-radius:50%;background:var(--ac);cursor:pointer;border:2px solid #fff}
+.frame-time{font-size:12px;font-weight:600;font-family:'DM Mono',monospace;color:var(--t2);text-align:center;margin-bottom:14px}
+
+/* ══ KOLEKSI ══ */
+.kol-top{
+  padding:12px 16px 10px;display:flex;flex-direction:column;gap:8px;
+  position:sticky;top:0;z-index:10;background:var(--bg);
+  border-bottom:1px solid var(--b1)
+}
+.srch-wrap{position:relative;display:flex;align-items:center}
+.srch-wrap svg{position:absolute;left:12px;width:15px;height:15px;color:var(--t3);pointer-events:none}
+#kol-search{padding:10px 12px 10px 36px;font-size:13px}
+#kol-search-clear{position:absolute;right:8px;background:none;border:none;color:var(--t3);cursor:pointer;padding:4px;display:none;align-items:center}
+#kol-search-clear svg{width:14px;height:14px}
+#note-search{padding:10px 12px 10px 36px;font-size:13px}
+#note-search-clear svg{width:14px;height:14px}
+.ctx-menu{
+  position:fixed;z-index:500;background:var(--s2);border:1px solid var(--b2);
+  border-radius:var(--rsm);overflow:hidden;min-width:168px;
+  box-shadow:0 12px 40px rgba(0,0,0,.7);display:none
+}
+.ctx-menu.show{display:block;animation:fup .15s ease}
+.ctx-item{
+  display:flex;align-items:center;gap:10px;padding:14px 16px;
+  font-size:14px;font-weight:600;cursor:pointer;color:var(--t1);
+  transition:background .12s;border-bottom:1px solid var(--b1)
+}
+.ctx-item:last-child{border-bottom:none}
+.ctx-item:active{background:var(--s3)}
+.ctx-item svg{width:15px;height:15px;flex-shrink:0}
+.ctx-item.danger{color:var(--rd)}
+.ctx-backdrop{position:fixed;inset:0;z-index:499;display:none}
+.ctx-backdrop.show{display:block}
+.tbar-title{flex:1;min-width:0}
+.tbar-pg{font-size:13px;font-weight:700;color:var(--t1);line-height:1.2}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:4px}
+.stat-box{background:var(--s2);border:1px solid var(--b1);border-radius:var(--rsm);padding:12px;text-align:center}
+.stat-box-num{font-size:26px;font-weight:800;line-height:1;margin-bottom:3px}
+.stat-box-lbl{font-size:10px;color:var(--t3);font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+.sf-row{display:flex;gap:0;background:var(--s2);border:1px solid var(--b1);border-radius:var(--rsm);overflow:hidden;width:100%}
+.sf{
+  flex:1;padding:9px 4px;border:none;background:none;color:var(--t3);
+  cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;font-size:11px;
+  font-weight:700;text-align:center;transition:all .15s;
+  border-right:1px solid var(--b1)
+}
+.sf:last-child{border-right:none}
+.sf.act{background:var(--ac);color:#fff}
+.lbl-row{display:flex;gap:7px;overflow-x:auto;align-items:center;scrollbar-width:none;padding-bottom:2px}
+.lbl-row::-webkit-scrollbar{display:none}
+/* Pill gabungan: chip filter + tombol hapus, dibuat menyatu rapi sebagai satu unit visual */
+.lbl-pill{
+  flex-shrink:0;display:inline-flex;align-items:center;
+  background:var(--s2);border:1px solid var(--b1);border-radius:20px;
+  overflow:hidden;transition:all .15s
+}
+.lbl-pill.act{background:var(--pug);border-color:rgba(155,110,245,.4)}
+.lbl-dot-btn{
+  flex-shrink:0;display:flex;align-items:center;justify-content:center;
+  width:28px;height:28px;margin-left:2px;border:none;background:none;cursor:pointer
+}
+.lbl-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;box-shadow:0 0 0 2px var(--s2)}
+.lbl-pill.act .lbl-dot{box-shadow:0 0 0 2px var(--pug)}
+.lbl-chip{
+  flex-shrink:0;display:inline-flex;align-items:center;gap:6px;
+  padding:6px 4px;border:none;background:none;
+  color:var(--t2);font-size:11.5px;font-weight:700;cursor:pointer;
+  transition:color .15s;font-family:'Plus Jakarta Sans',sans-serif;white-space:nowrap
+}
+.lbl-chip.no-dot{padding-left:13px}
+.lbl-pill.act .lbl-chip{color:var(--pu)}
+.lbl-del{
+  flex-shrink:0;width:26px;height:26px;margin-right:3px;border-radius:50%;
+  border:none;background:none;color:var(--t3);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  font-size:0;transition:background .15s,color .15s
+}
+.lbl-del svg{width:11px;height:11px}
+.lbl-del:active{background:var(--rdg);color:var(--rd)}
+.lbl-pill.act .lbl-del{color:var(--pu)}
+.lbl-add{
+  flex-shrink:0;padding:6px 13px;border-radius:20px;
+  border:1.5px dashed var(--b3);background:none;color:var(--t2);
+  font-size:11.5px;font-weight:700;cursor:pointer;
+  font-family:'Plus Jakarta Sans',sans-serif;display:flex;align-items:center;gap:4px;
+  transition:all .15s
+}
+.lbl-add:active{background:var(--s2);border-color:var(--ac2);color:var(--ac2)}
+.lbl-add svg{width:11px;height:11px}
+.lcp-sw{
+  width:42px;height:42px;border-radius:50%;border:2.5px solid transparent;
+  cursor:pointer;transition:all .15s;position:relative;flex-shrink:0
+}
+.lcp-sw.act{border-color:var(--t1)}
+.lcp-sw.act::after{
+  content:'';position:absolute;inset:0;border-radius:50%;
+  border:2px solid var(--s1);box-shadow:inset 0 0 0 2px rgba(0,0,0,.15)
+}
+.lcp-grid{display:flex;gap:12px;flex-wrap:wrap;padding:4px 0 8px;justify-content:center}
+.kol-body{padding:12px 16px 0;margin-top:0}
+
+/* GRID */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.gc{
+  background:var(--s1);border:1px solid var(--b1);border-radius:var(--r);
+  overflow:hidden;cursor:pointer;transition:transform .15s,border-color .15s;
+  display:flex;flex-direction:column
+}
+.gc:active{transform:scale(.97)}
+.gthumb{width:100%;aspect-ratio:3/4;background:var(--s2);position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.gthumb img{width:100%;height:100%;object-fit:cover}
+.gthumb .tip{color:var(--t3)}
+.gthumb .tip svg{width:28px;height:28px}
+.gstat{position:absolute;top:7px;left:7px}
+.glbls{position:absolute;top:7px;right:7px;display:flex;flex-direction:column;gap:3px;align-items:flex-end}
+.ginfo{padding:10px}
+.gtitle{font-size:12px;font-weight:700;line-height:1.3;margin-bottom:6px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.g-btns{display:flex;gap:5px;margin-top:7px}
+.g-act{
+  flex:1;min-width:0;padding:6px 8px;border-radius:6px;border:none;cursor:pointer;
+  font-family:'Plus Jakarta Sans',sans-serif;font-size:11px;font-weight:700;
+  display:flex;align-items:center;justify-content:center;gap:4px;transition:all .15s
+}
+.g-act:active{transform:scale(.95)}
+.g-act.copy{background:var(--s3);color:var(--t2)}
+.g-act.prog{background:var(--acg);color:var(--ac2)}
+.g-act.prog.am{background:var(--amg);color:var(--am)}
+.g-act.prog.gr{background:var(--grg);color:var(--gr)}
+.g-act.bell{padding:6px;flex:none;background:var(--s3);color:var(--t3)}
+.g-act svg{width:12px;height:12px}
+
+/* LIST */
+.lc{
+  background:var(--s1);border:1px solid var(--b1);border-radius:var(--r);
+  display:flex;overflow:hidden;cursor:pointer;transition:border-color .15s;margin-bottom:10px
+}
+.lc:active{background:var(--s2)}
+.lthumb{width:72px;flex-shrink:0;background:var(--s2);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;aspect-ratio:3/4;align-self:stretch}
+.lthumb img{width:100%;height:100%;object-fit:cover}
+.lthumb .tip{color:var(--t3)}
+.lthumb .tip svg{width:20px;height:20px}
+.lbody{flex:1;padding:12px 14px;min-width:0;display:flex;flex-direction:column;gap:5px}
+.ltitle{font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lcap{font-size:12px;color:var(--t2);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.4}
+.ltags{display:flex;gap:4px;flex-wrap:wrap;align-items:center}
+.lbottom{display:flex;align-items:center;justify-content:space-between;gap:6px}
+.pdots{display:flex;gap:3px;flex-wrap:wrap}
+.pdot{font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;font-family:'DM Mono',monospace}
+.pd-on{background:var(--grg);color:var(--gr)}
+.pd-off{background:var(--s3);color:var(--t3)}
+.lpct{font-size:10px;color:var(--t3);font-family:'DM Mono',monospace;white-space:nowrap}
+.l-act-row{display:flex;gap:5px}
+.l-act{
+  padding:5px 8px;border-radius:5px;border:none;cursor:pointer;
+  font-family:'Plus Jakarta Sans',sans-serif;font-size:10px;font-weight:700;
+  display:flex;align-items:center;gap:3px;transition:all .15s
+}
+.l-act:active{transform:scale(.95)}
+.l-act.copy{background:var(--s3);color:var(--t2)}
+.l-act.bell{background:var(--s3);color:var(--t3);padding:5px 6px}
+.l-act svg{width:11px;height:11px}
+
+/* STATUS DOTS */
+.sd-gr{background:var(--gr)}
+.sd-am{background:var(--am)}
+.sd-ac{background:var(--ac2)}
+.sd-mu{background:var(--t3)}
+
+/* ══ NOTES ══ */
+.notes-body{padding:14px 16px 0}
+.ng{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.nc{background:var(--s1);border:1px solid var(--b1);border-radius:var(--r);padding:14px;cursor:pointer;transition:transform .15s;position:relative}
+.nc:active{transform:scale(.97)}
+.nc.pin{border-color:rgba(91,110,245,.3)}
+.nc-title{font-size:13px;font-weight:800;line-height:1.3;margin-bottom:6px;padding-right:14px}
+.nc-prev{font-size:11px;color:var(--t2);line-height:1.5;display:-webkit-box;-webkit-line-clamp:5;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:7px}
+.nc-tags{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:6px}
+.nc-date{font-size:10px;color:var(--t3);font-family:'DM Mono',monospace}
+.nc-pin{position:absolute;top:10px;right:10px;color:var(--ac2)}
+.nc-pin svg{width:11px;height:11px}
+.pin-sep{font-size:10px;font-weight:700;color:var(--ac2);letter-spacing:.7px;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:5px}
+.pin-sep svg{width:11px;height:11px}
+
+/* ══ TIMEBLOCK ══ */
+.tb-page{padding:14px 16px 0}
+.day-tabs{display:flex;gap:0;border:1px solid var(--b1);border-radius:var(--rxs);overflow:hidden;margin-bottom:12px}
+.dt{flex:1;padding:8px 4px;border:none;background:var(--s2);color:var(--t3);cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;font-size:11px;font-weight:700;text-align:center;transition:all .15s;border-right:1px solid var(--b1)}
+.dt:last-child{border-right:none}
+.dt.act{background:var(--ac);color:#fff}
+.dt-sub{font-size:8px;opacity:.7;display:block;margin-top:1px}
+.stat-card{background:var(--s1);border:1px solid var(--b1);border-radius:var(--r);padding:14px;margin-bottom:12px;cursor:pointer}
+.stat-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.tb-list{display:flex;flex-direction:column;gap:8px}
+.tb-item{display:flex;gap:10px;align-items:flex-start}
+.tb-time{width:42px;flex-shrink:0;text-align:right;font-size:10px;font-family:'DM Mono',monospace;color:var(--t3);padding-top:12px;line-height:1.4}
+.tb-body{flex:1;background:var(--s1);border:1px solid var(--b1);border-radius:var(--rsm);overflow:hidden}
+.tb-hd{padding:11px 12px;display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none}
+.tb-col{width:3px;height:32px;border-radius:2px;flex-shrink:0}
+.tb-info{flex:1;min-width:0}
+.tb-name{font-size:13px;font-weight:700}
+.tb-sub{font-size:11px;color:var(--t2);margin-top:1px}
+.tb-actions{display:flex;align-items:center;gap:4px}
+.tba{background:none;border:none;cursor:pointer;color:var(--t3);padding:5px;display:flex;align-items:center;border-radius:5px;transition:all .15s}
+.tba:active{background:var(--s3);color:var(--t1)}
+.tba svg{width:14px;height:14px}
+.tb-arr{color:var(--t3);transition:transform .2s;display:flex;align-items:center}
+.tb-arr.open{transform:rotate(180deg)}
+.tb-arr svg{width:13px;height:13px}
+.tb-tasks{border-top:1px solid var(--b1);padding:10px 12px;display:none}
+.tb-tasks.open{display:block}
+.tbt-item{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--b1)}
+.tbt-item:last-child{border:none}
+.tbt-txt{font-size:13px;flex:1}
+.tbt-txt.done{text-decoration:line-through;color:var(--t3)}
+.tbt-del{background:none;border:none;cursor:pointer;color:var(--t3);padding:4px;display:flex;align-items:center;border-radius:4px}
+.tbt-del:active{background:var(--rdg);color:var(--rd)}
+.tbt-del svg{width:13px;height:13px}
+.tb-add-row{display:flex;gap:8px;margin-top:8px}
+
+/* ══ SETTINGS ══ */
+.settings-pg{padding:16px}
+.sg{margin-bottom:20px}
+.sg-title{font-size:10px;font-weight:700;color:var(--t3);letter-spacing:.8px;text-transform:uppercase;margin-bottom:8px;padding:0 2px}
+.si{background:var(--s1);border:1px solid var(--b1);padding:14px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;cursor:pointer;transition:background .15s;margin-bottom:2px}
+.si:first-of-type{border-radius:var(--rsm) var(--rsm) 4px 4px}
+.si:last-of-type{border-radius:4px 4px var(--rsm) var(--rsm);margin-bottom:0}
+.si:only-child{border-radius:var(--rsm);margin-bottom:0}
+.si:active{background:var(--s2)}
+.si-m{flex:1}
+.si-lbl{font-size:14px;font-weight:600}
+.si-sub{font-size:12px;color:var(--t3);margin-top:2px}
+.si-r{color:var(--t3);display:flex;align-items:center;gap:6px;flex-shrink:0}
+.si-r svg{width:15px;height:15px}
+.tog{width:42px;height:24px;border-radius:12px;background:var(--s3);border:1px solid var(--b2);cursor:pointer;position:relative;transition:background .2s;flex-shrink:0}
+.tog.on{background:var(--ac);border-color:var(--ac)}
+.tog::after{content:'';position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:#fff;transition:transform .2s;box-shadow:0 1px 4px rgba(0,0,0,.3)}
+.tog.on::after{transform:translateX(18px)}
+
+/* KOLEKSI DETAIL */
+.kd-thumb{width:100%;aspect-ratio:3/4;background:var(--s2);overflow:hidden;display:flex;align-items:center;justify-content:center}
+.kd-thumb img{width:100%;height:100%;object-fit:cover}
+</style>
+</head>
+<body>
+<div id="app">
+  <!-- TOPBAR -->
+  <div id="topbar">
+    <div class="logo" style="background: linear-gradient(135deg, var(--ac2), var(--pu)); -webkit-background-clip: text; background-clip: text; color: transparent;">
+  Clips Tracking
+</div>
+    <div id="tbar-center" style="flex:1;min-width:0"></div>
+    <div style="display:flex;align-items:center;gap:6px;flex-shrink:0"><button class="ib" id="theme-toggle-btn" onclick="toggleTheme()" title="Toggle tema"></button><div id="tbar-r" style="display:flex;align-items:center;gap:6px"></div></div>
+  </div>
+
+  <!-- PAGE: KOLEKSI -->
+  <div class="page act" id="pg-koleksi">
+    <div class="kol-top">
+      <div class="srch-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="kol-search" placeholder="Cari judul atau caption...">
+        <button id="kol-search-clear" onclick="clearSearch()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      </div>
+      <div class="sf-row" id="sf-row">
+        <button class="sf act" data-s="all">Semua</button>
+        <button class="sf" data-s="ready">Siap</button>
+        <button class="sf" data-s="partial">Sebagian</button>
+        <button class="sf" data-s="done">Selesai</button>
+      </div>
+      <div class="lbl-row" id="lbl-row"></div>
+    </div>
+    <div class="kol-body" id="kol-body"></div>
+  </div>
+
+  <!-- PAGE: NOTES -->
+  <div class="page" id="pg-notes">
+    <div style="padding:12px 16px 0;position:sticky;top:0;z-index:10;background:var(--bg);border-bottom:1px solid var(--b1);padding-bottom:10px">
+      <div class="srch-wrap" style="margin-bottom:8px">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="note-search" placeholder="Cari judul atau isi note...">
+        <button id="note-search-clear" onclick="clearNoteSearch()" style="position:absolute;right:8px;background:none;border:none;color:var(--t3);cursor:pointer;padding:4px;display:none;align-items:center"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:14px;height:14px"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      </div>
+      <div class="lbl-row" id="note-lbl-row"></div>
+    </div>
+    <div class="notes-body" id="notes-body"></div>
+  </div>
+
+  <!-- PAGE: TIMEBLOCK -->
+  <div class="page" id="pg-timeblock">
+    <div class="tb-page">
+      <div class="day-tabs" id="day-tabs"></div>
+      <div class="stat-card">
+        <div class="stat-row">
+          <div>
+            <span style="font-size:12px;color:var(--t2);font-weight:600">Target Konten Hari Ini</span>
+            <div style="font-size:10px;color:var(--t3);margin-top:2px">Otomatis +1 tiap konten ditambah</div>
+          </div>
+          <span class="mono" style="font-size:12px" id="tgt-val">0 / 0</span>
+        </div>
+        <div class="pw" style="margin-bottom:10px"><div class="pb" id="tgt-bar" style="width:0%"></div></div>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-g btn-sm" style="flex:1" onclick="promptTgt()">Set Target Manual</button>
+          <button class="btn btn-g btn-sm" style="flex:1" onclick="showHistory()">Riwayat</button>
+        </div>
+      </div>
+      <div class="tb-list" id="tb-list"></div>
+    </div>
+  </div>
+
+  <!-- PAGE: SETTINGS -->
+  <div class="page" id="pg-settings">
+    <div class="settings-pg" id="settings-body"></div>
+  </div>
+
+  <!-- NAV -->
+  <nav id="nav">
+    <button class="nb act" data-p="koleksi">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/><polygon points="10,8 16,11 10,14" fill="currentColor" stroke="none"/></svg>
+      Koleksi
+    </button>
+    <button class="nb" data-p="notes">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="13" y2="17"/></svg>
+      Notes
+    </button>
+    <button class="nb" data-p="timeblock">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      Jadwal
+    </button>
+    <button class="nb" data-p="settings">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      Setelan
+    </button>
+  </nav>
+</div>
+
+<!-- FAB -->
+<button id="fab">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+</button>
+<div id="toast"></div>
+
+<!-- ═══ SHEET: KOLEKSI ADD/EDIT ═══ -->
+<div class="ov" id="ov-kol">
+  <div class="sheet" onclick="event.stopPropagation()">
+    <div class="sh-handle"></div>
+    <div class="sh-title" id="sh-kol-t">Konten Baru</div>
+    <div class="sh-body">
+
+      <!-- THUMBNAIL ROW — compact, tidak makan ruang -->
+      <div class="fg">
+        <label>THUMBNAIL</label>
+        <div class="thumb-row" id="thumb-row">
+          <div class="thumb-preview" id="thumb-preview">
+            <div class="tp-ico" id="tp-ico">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/><polygon points="10,8 16,11 10,14" fill="currentColor" stroke="none"/></svg>
+            </div>
+            <img id="thumb-img" alt="">
+          </div>
+          <div class="thumb-meta">
+            <div class="thumb-meta-title" id="thumb-meta-title">Belum ada thumbnail</div>
+            <div class="thumb-meta-sub" id="thumb-meta-sub">Pilih dari video atau galeri</div>
+          </div>
+          <div class="thumb-actions">
+            <button class="btn btn-g btn-sm" id="vid-btn" onclick="handleVidBtn()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px"><rect x="2" y="3" width="20" height="14" rx="2"/><polygon points="10,8 16,11 10,14" fill="currentColor" stroke="none"/></svg>
+              <span id="vid-btn-lbl">Video</span>
+            </button>
+            <button class="btn btn-g btn-sm" onclick="document.getElementById('img-in').click()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+              Galeri
+            </button>
+          </div>
+        </div>
+        <input type="file" id="vid-in" accept="video/*" style="display:none">
+        <input type="file" id="img-in" accept="image/*" style="display:none">
+      </div>
+
+      <div class="fg"><label>JUDUL</label><input id="kol-title" type="text" placeholder="Judul konten / ide clip..."></div>
+
+      <div class="fg">
+        <label>HOOK / ALASAN MENARIK <span style="font-size:9px;color:var(--t3);font-weight:500;text-transform:none;letter-spacing:0">(opsional)</span></label>
+        <input id="kol-hook" type="text" placeholder="Kenapa konten ini layak diclip? Hook-nya apa?">
+      </div>
+
+      <div class="fg"><label>CAPTION</label><textarea id="kol-cap" rows="3" placeholder="Caption untuk posting..."></textarea></div>
+
+      <div class="fg" id="kol-stat-fg">
+        <label>STATUS <span style="font-size:9px;color:var(--t3);font-weight:500;text-transform:none;letter-spacing:0" id="kol-stat-note">(otomatis dari platform jika ada)</span></label>
+        <div style="display:flex;gap:6px;flex-wrap:wrap" id="kol-stat-btns"></div>
+      </div>
+
+      <div class="fg">
+        <label>LABEL / CAMPAIGN</label>
+        <div id="kol-lbl-disp" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px"></div>
+        <div id="kol-glbl-chips" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px"></div>
+        <div style="display:flex;gap:8px">
+          <input id="kol-lbl-in" type="text" placeholder="Buat label baru...">
+          <button class="btn btn-g btn-sm" onclick="addKolLbl()" style="flex-shrink:0">+</button>
+        </div>
+      </div>
+
+      <div class="fg">
+        <label>PLATFORM</label>
+        <div id="kol-plat-list"></div>
+      </div>
+
+      <div class="fg">
+        <label>JADWAL UPLOAD</label>
+        <input id="kol-sched" type="datetime-local">
+      </div>
+      <div class="fg">
+        <label>PENGINGAT JADWAL <span style="font-size:9px;color:var(--t3);font-weight:500;text-transform:none;letter-spacing:0">(opsional)</span></label>
+        <input id="kol-notif-note" type="text" placeholder="Misal: Upload semua platform, cross-post IG & TikTok">
+      </div>
+
+      <div class="row2">
+        <button class="btn btn-g btn-w" onclick="closeOv('ov-kol')">Batal</button>
+        <button class="btn btn-p btn-w" onclick="saveKol()">Simpan</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SHEET: FRAME PICKER (terpisah, muncul di atas form) ═══ -->
+<div class="ov" id="ov-frame">
+  <div class="sheet" onclick="event.stopPropagation()">
+    <div class="sh-handle"></div>
+    <div class="sh-title">Pilih Frame Thumbnail</div>
+    <div class="frame-inner">
+      <div class="frame-canvas-wrap">
+        <canvas id="frame-canvas"></canvas>
+      </div>
+      <video id="frame-video" style="display:none" playsinline muted></video>
+      <div class="frame-slider-wrap">
+        <div class="frame-slider-lbl">Geser untuk pilih frame</div>
+        <input type="range" class="frame-slider" id="frame-slider" min="0" max="100" value="10">
+      </div>
+      <div class="frame-time" id="frame-time">0:00</div>
+      <div class="row2">
+        <button class="btn btn-g btn-w" onclick="cancelFrame()">Batal</button>
+        <button class="btn btn-p btn-w" onclick="confirmFrame()">Pakai Frame Ini</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SHEET: NOTE ADD/EDIT ═══ -->
+<div class="ov" id="ov-note">
+  <div class="sheet" onclick="event.stopPropagation()">
+    <div class="sh-handle"></div>
+    <div class="sh-title" id="sh-note-t">Note Baru</div>
+    <div class="sh-body">
+      <div class="fg"><label>JUDUL NOTE</label><input id="note-title" type="text" placeholder="Judul note..."></div>
+      <div class="fg">
+        <label>ISI NOTE</label>
+        <div style="font-size:11px;color:var(--t3);margin-bottom:6px;line-height:1.6">
+          Tulis teks bebas. Untuk <b style="color:var(--cy)">checkbox</b>, gunakan format:<br>
+          <span style="font-family:'DM Mono',monospace;color:var(--ac2);font-size:10px">[ ] Task belum selesai &nbsp;&nbsp; [x] Task sudah selesai</span>
+        </div>
+        <textarea id="note-content" rows="7" placeholder="Tulis isi note...&#10;&#10;Contoh checkbox:&#10;[ ] Beli kopi&#10;[x] Edit video&#10;[ ] Upload konten"></textarea>
+      </div>
+      <div class="fg">
+        <label>LABEL NOTE (OPSIONAL)</label>
+        <div id="note-lbl-disp" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px"></div>
+        <div id="note-glbl-chips" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px"></div>
+        <div style="display:flex;gap:8px">
+          <input id="note-lbl-in" type="text" placeholder="Buat label baru...">
+          <button class="btn btn-g btn-sm" onclick="addNoteLbl()" style="flex-shrink:0">+</button>
+        </div>
+      </div>
+      <div class="row2">
+        <button class="btn btn-g btn-w" onclick="closeOv('ov-note')">Batal</button>
+        <button class="btn btn-p btn-w" onclick="saveNote()">Simpan</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SHEET: TIMEBLOCK ADD/EDIT ═══ -->
+<div class="ov" id="ov-tb">
+  <div class="sheet" onclick="event.stopPropagation()">
+    <div class="sh-handle"></div>
+    <div class="sh-title" id="sh-tb-t">Blok Waktu Baru</div>
+    <div class="sh-body">
+      <div class="fg"><label>NAMA</label><input id="tb-name" type="text" placeholder="Misal: Clip, Edit, Upload..."></div>
+      <div style="display:flex;gap:12px">
+        <div class="fg" style="flex:1"><label>MULAI</label><input id="tb-start" type="time" value="09:00"></div>
+        <div class="fg" style="flex:1"><label>SELESAI</label><input id="tb-end" type="time" value="10:00"></div>
+      </div>
+      <div class="fg">
+        <label>WARNA</label>
+        <div id="tb-colors" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px"></div>
+      </div>
+      <div class="fg">
+        <label>HARI AKTIF</label>
+        <div id="tb-day-picks" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px"></div>
+      </div>
+      <div class="fg">
+        <label>HUBUNGKAN KE TARGET KONTEN</label>
+        <div style="display:flex;align-items:center;gap:10px;padding:8px 0;cursor:pointer" onclick="toggleTbLink()">
+          <div class="chk" id="tb-link-chk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg></div>
+          <span style="font-size:13px;color:var(--t2)">Hitung task selesai sebagai progres konten</span>
+        </div>
+      </div>
+      <div class="fg" id="tb-tgt-grp" style="display:none">
+        <label>TARGET KONTEN PER HARI</label>
+        <input id="tb-tgt-num" type="number" min="1" value="10">
+      </div>
+      <div class="row2">
+        <button class="btn btn-g btn-w" onclick="closeOv('ov-tb')">Batal</button>
+        <button class="btn btn-p btn-w" onclick="saveTb()">Simpan</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SHEET: ADD GLOBAL LABEL ═══ -->
+<div class="ov" id="ov-lbl">
+  <div class="sheet" onclick="event.stopPropagation()">
+    <div class="sh-handle"></div>
+    <div class="sh-title">Tambah Label</div>
+    <div class="sh-body">
+      <div class="fg"><label>NAMA LABEL</label><input id="glbl-in" type="text" placeholder="Nama label/campaign..."></div>
+      <div class="row2">
+        <button class="btn btn-g btn-w" onclick="closeOv('ov-lbl')">Batal</button>
+        <button class="btn btn-p btn-w" onclick="saveGlbl()">Tambah</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SHEET: PLATFORM MANAGE ═══ -->
+<div class="ov" id="ov-plat">
+  <div class="sheet" onclick="event.stopPropagation()">
+    <div class="sh-handle"></div>
+    <div class="sh-title">Kelola Platform</div>
+    <div class="sh-body">
+      <div id="plat-list" style="margin-bottom:14px"></div>
+      <div style="display:flex;gap:8px">
+        <input id="new-plat-in" type="text" placeholder="Nama platform baru...">
+        <button class="btn btn-p btn-sm" onclick="addPlat()" style="flex-shrink:0">Tambah</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ CONTEXT MENU ═══ -->
+<div class="ctx-backdrop" id="ctx-backdrop" onclick="closeCtx()"></div>
+<div class="ctx-menu" id="ctx-menu">
+  <div class="ctx-item" onclick="ctxEdit()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Edit
+  </div>
+  <div class="ctx-item" onclick="ctxMarkAllDone()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>Tandai Semua Selesai
+  </div>
+  <div class="ctx-item" onclick="ctxCopyCap()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Salin Caption
+  </div>
+  <div class="ctx-item danger" onclick="ctxDelete()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>Hapus
+  </div>
+</div>
+
+<!-- ═══ CONTEXT MENU: NOTE ═══ -->
+<div class="ctx-backdrop" id="note-ctx-backdrop" onclick="closeNoteCtx()"></div>
+<div class="ctx-menu" id="note-ctx-menu">
+  <div class="ctx-item" onclick="noteCtxEdit()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Edit
+  </div>
+  <div class="ctx-item" onclick="noteCtxPin()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17H19V15L17 12V5H7V12L5 15V17Z"/><line x1="12" y1="5" x2="12" y2="3"/></svg><span id="note-ctx-pin-lbl">Pin</span>
+  </div>
+  <div class="ctx-item" onclick="noteCtxCopy()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Salin Isi
+  </div>
+  <div class="ctx-item danger" onclick="noteCtxDelete()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>Hapus
+  </div>
+</div>
+<div class="ov" id="ov-confirm">
+  <div class="sheet" onclick="event.stopPropagation()" style="padding:20px 20px calc(20px + var(--sab))">
+    <div class="sh-handle" style="margin-top:0;margin-bottom:16px"></div>
+    <div style="font-size:18px;font-weight:800;margin-bottom:8px;letter-spacing:-.3px" id="cf-title"></div>
+    <div style="font-size:14px;color:var(--t2);line-height:1.65;margin-bottom:20px" id="cf-body"></div>
+    <div class="row2">
+      <button class="btn btn-g btn-w" onclick="closeOv('ov-confirm')">Batal</button>
+      <button class="btn btn-d btn-w" id="cf-btn">Konfirmasi</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SHEET: RIWAYAT KONTEN ═══ -->
+<div class="ov" id="ov-hist">
+  <div class="sheet" onclick="event.stopPropagation()">
+    <div class="sh-handle"></div>
+    <div class="sh-title">Riwayat Target Konten</div>
+    <div class="sh-body">
+      <div style="display:flex;gap:0;background:var(--s2);border:1px solid var(--b1);border-radius:var(--rsm);overflow:hidden;margin-bottom:14px" id="hist-tab-row">
+        <button class="sf act" data-ht="daily" onclick="setHistTab('daily')">Harian</button>
+        <button class="sf" data-ht="weekly" onclick="setHistTab('weekly')">Mingguan</button>
+        <button class="sf" data-ht="monthly" onclick="setHistTab('monthly')">Bulanan</button>
+      </div>
+      <div id="hist-body" style="max-height:60vh;overflow-y:auto"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SHEET: SET TARGET ═══ -->
+<div class="ov" id="ov-tgt">
+  <div class="sheet" onclick="event.stopPropagation()">
+    <div class="sh-handle"></div>
+    <div class="sh-title">Target Konten Hari Ini</div>
+    <div class="sh-body">
+      <div class="fg">
+        <label>JUMLAH TARGET</label>
+        <input id="tgt-in" type="number" min="1" max="999" value="10" placeholder="Misal: 10">
+      </div>
+      <div class="row2">
+        <button class="btn btn-g btn-w" onclick="closeOv('ov-tgt')">Batal</button>
+        <button class="btn btn-p btn-w" onclick="saveTgt()">Simpan</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ FULLSCREEN: KOLEKSI DETAIL ═══ -->
+<div class="fsm" id="fsm-kol">
+  <div class="fsm-hd">
+    <button class="btn btn-g btn-sm" onclick="closeFsm('fsm-kol')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:14px;height:14px"><polyline points="15 18 9 12 15 6"/></svg>
+      Kembali
+    </button>
+    <div style="display:flex;gap:6px">
+      <button class="btn btn-g btn-sm" onclick="editKolFromView()">Edit</button>
+      <button class="btn btn-d btn-sm" onclick="deleteKolFromView()">Hapus</button>
+    </div>
+  </div>
+  <div id="kv-body"></div>
+</div>
+
+<!-- ═══ FULLSCREEN: NOTE VIEW ═══ -->
+<div class="fsm" id="fsm-note">
+  <div class="fsm-hd">
+    <button class="btn btn-g btn-sm" onclick="closeFsm('fsm-note')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:14px;height:14px"><polyline points="15 18 9 12 15 6"/></svg>
+      Kembali
+    </button>
+    <div style="display:flex;gap:6px">
+      <button class="btn btn-g btn-sm" id="nv-copy-btn" onclick="copyNoteContent()">Salin</button>
+      <button class="btn btn-g btn-sm" id="nv-pin-btn" onclick="togglePin()">Pin</button>
+      <button class="btn btn-g btn-sm" onclick="editNoteFromView()">Edit</button>
+      <button class="btn btn-d btn-sm" onclick="deleteNoteFromView()">Hapus</button>
+    </div>
+  </div>
+  <div id="nv-body" style="padding:20px 16px"></div>
+</div>
+
+<script>
+'use strict';
+
+/* ══ STORE ══ */
+const S={
+  get(k,d=[]){try{const v=localStorage.getItem('cl_'+k);return v!==null?JSON.parse(v):d}catch{return d}},
+  set(k,v){try{localStorage.setItem('cl_'+k,JSON.stringify(v))}catch{toast('Storage penuh!','warn')}}
+};
+let kolData=S.get('kol',[]);
+let notesData=S.get('notes',[]);
+let tbData=S.get('tb',[]);
+let platforms=S.get('plats',[{id:'ig',name:'IG'},{id:'tt',name:'TikTok'}]);
+let glbls=S.get('glbls',[]);
+let noteLbls=S.get('noteLbls',[]); // Label khusus Notes, terpisah dari koleksi
+// Migrasi data lama: noteLbls dulu array string, sekarang array {name,color} agar user bisa custom warna
+const LBL_COLORS=['cy','pu','ac','gr','am','rd','pk','or'];
+if(noteLbls.length&&typeof noteLbls[0]==='string'){
+  noteLbls=noteLbls.map((l,i)=>({name:l,color:LBL_COLORS[i%LBL_COLORS.length]}));
+  S.set('noteLbls',noteLbls);
+}
+function noteLblColor(name){const f=noteLbls.find(l=>l.name===name);return f?f.color:'cy'}
+let dayProg=S.get('dprog',{});
+let cfg=S.get('cfg',{});
+
+/* ══ UTILS ══ */
+const _toastIcons={
+  ok:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:14px;height:14px;flex-shrink:0;color:#2db87a"><polyline points="20 6 9 17 4 12"/></svg>',
+  err:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:14px;height:14px;flex-shrink:0;color:#e05555"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',
+  warn:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:14px;height:14px;flex-shrink:0;color:#e8a020"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
+  info:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:14px;height:14px;flex-shrink:0;color:#5b6ef5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>',
+  del:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:14px;height:14px;flex-shrink:0;color:#e05555"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>',
+  pin:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:14px;height:14px;flex-shrink:0;color:#9b6ef5"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17H19V15L17 12V5H7V12L5 15V17Z"/><line x1="12" y1="5" x2="12" y2="3"/></svg>',
+  bell:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:14px;height:14px;flex-shrink:0;color:#22c0d8"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>',
+  pkg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:14px;height:14px;flex-shrink:0;color:#5b6ef5"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>',
+  cal:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:14px;height:14px;flex-shrink:0;color:#e8a020"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>',
+  tgt:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:14px;height:14px;flex-shrink:0;color:#2db87a"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>',
+  dl:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:14px;height:14px;flex-shrink:0;color:#2db87a"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>',
+  undo:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:14px;height:14px;flex-shrink:0;color:#8080aa"><polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></svg>',
+  light:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:14px;height:14px;flex-shrink:0;color:#e8a020"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>',
+  dark:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:14px;height:14px;flex-shrink:0;color:#8080aa"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>',
+};
+let _tt;
+function toast(m,type,d=2200){
+  const e=document.getElementById('toast');
+  const icon=_toastIcons[type]||'';
+  e.innerHTML=icon?`<span style="display:inline-flex;align-items:center;gap:7px">${icon}<span>${m}</span></span>`:m;
+  e.classList.add('show');clearTimeout(_tt);_tt=setTimeout(()=>e.classList.remove('show'),d);
+}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
+function esc(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+function fdate(ts){return new Date(ts).toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'})}
+function fdt(ts){const d=new Date(ts);return d.toLocaleDateString('id-ID',{day:'numeric',month:'short'})+' '+d.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'})}
+function tdKey(dayIdx){
+  // If dayIdx provided, generate key for that day of current week
+  if(dayIdx!==undefined){
+    const today=new Date();
+    const diff=dayIdx-today.getDay();
+    const d=new Date(today);d.setDate(d.getDate()+diff);
+    // Use (month+1) so keys are human-readable and no cross-year collisions
+    return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate();
+  }
+  const d=new Date();return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate();
+}
+
+function openOv(id){
+  const el=document.getElementById(id);
+  el.classList.remove('closing');el.classList.add('open');
+  const sh=el.querySelector('.sheet');if(sh)sh.classList.remove('closing');
+  // Backdrop click to close semua overlay termasuk confirm
+  if(!el._ovHandler){
+    el._ovHandler=function(e){if(e.target===el)closeOv(id)};
+    el.addEventListener('click',el._ovHandler);
+  }
+}
+function closeOv(id){const el=document.getElementById(id);if(!el)return;el.classList.remove('open');el.classList.remove('closing');const sh=el.querySelector('.sheet');if(sh)sh.classList.remove('closing')}
+function openFsm(id){document.getElementById(id).classList.add('open')}
+function closeFsm(id){document.getElementById(id).classList.remove('open')}
+
+document.querySelectorAll('.ov').forEach(el=>{
+  el.addEventListener('click',function(e){if(e.target===this)closeOv(this.id)});
+});
+
+function copyText(t,msg='Disalin!'){
+  if(navigator.clipboard){navigator.clipboard.writeText(t).then(()=>toast(msg,'ok')).catch(()=>fallbackCopy(t,msg))}
+  else fallbackCopy(t,msg);
+}
+function fallbackCopy(t,msg){
+  const ta=document.createElement('textarea');ta.value=t;ta.style.cssText='position:fixed;opacity:0;top:0;left:0';
+  document.body.appendChild(ta);ta.focus();ta.select();
+  try{document.execCommand('copy');toast(msg,'ok')}catch{toast('Gagal salin','err')}
+  document.body.removeChild(ta);
+}
+
+/* ══ NAVIGATION ══ */
+let curPage='koleksi',kolView='grid',kolSort='newest';
+document.querySelectorAll('.nb').forEach(b=>{
+  b.addEventListener('click',()=>{
+    const p=b.dataset.p;
+    document.querySelectorAll('.nb').forEach(x=>x.classList.remove('act'));
+    b.classList.add('act');
+    document.querySelectorAll('.page').forEach(x=>x.classList.remove('act'));
+    document.getElementById('pg-'+p).classList.add('act');
+    curPage=p;
+    updateTopbar(p);
+    if(p==='notes')renderNotes();
+    else if(p==='timeblock')renderTb();
+    else if(p==='settings')renderSettings();
+    // FAB hidden on settings
+    document.getElementById('fab').classList.toggle('hidden',p==='settings');
+  });
+});
+
+function updateTopbar(p){
+  const r=document.getElementById('tbar-r');
+  const center=document.getElementById('tbar-center');
+  const titles={koleksi:'Koleksi',notes:'Notes',timeblock:'Jadwal',settings:'Setelan'};
+  if(center)center.innerHTML=''; // keep clean, logo is enough
+  if(p==='koleksi'){
+    const sortIcon=kolSort==='newest'
+      ?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>'
+      :'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>';
+    r.innerHTML=`
+      <button class="ib" onclick="toggleSort()" title="Urutan">${sortIcon}</button>
+      <button class="ib" onclick="setView(kolView==='grid'?'list':'grid')" id="view-toggle">
+        ${kolView==='grid'
+          ?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>'
+          :'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>'
+        }
+      </button>`;
+  } else if(p==='timeblock'){
+    r.innerHTML=`<button class="ib" onclick="promptTgt()" title="Set target"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></button>`;
+  } else {
+    r.innerHTML='';
+  }
+}
+
+function setView(v){kolView=v;updateTopbar('koleksi');renderKol()}
+function toggleSort(){
+  kolSort=kolSort==='newest'?'schedule':'newest';
+  updateTopbar('koleksi');renderKol();
+  toast(kolSort==='schedule'?'Urut jadwal upload':'Urut terbaru dulu','cal');
+}
+function fabClick(){
+  if(curPage==='koleksi')openKolSheet();
+  else if(curPage==='notes')openNoteSheet();
+  else if(curPage==='timeblock')openTbSheet();
+}
+document.getElementById('fab').addEventListener('click',fabClick);
+
+/* ══ KOLEKSI ══ */
+let kFilter='all',kLblFilter=null,kSearch='';
+let _editKolId=null,_kolLbls=[],_kolStatus='ready',_kolThumb=null;
+let _vidEl=null;
+
+document.getElementById('kol-search').addEventListener('input',function(){
+  kSearch=this.value.trim().toLowerCase();
+  document.getElementById('kol-search-clear').style.display=kSearch?'flex':'none';
+  renderKol();
+});
+function clearSearch(){
+  kSearch='';document.getElementById('kol-search').value='';
+  document.getElementById('kol-search-clear').style.display='none';
+  renderKol();
+}
+
+document.getElementById('sf-row').addEventListener('click',e=>{
+  const b=e.target.closest('.sf');if(!b)return;
+  document.querySelectorAll('.sf').forEach(x=>x.classList.remove('act'));
+  b.classList.add('act');kFilter=b.dataset.s;renderKol();
+});
+
+function renderLblRow(){
+  var row=document.getElementById('lbl-row');
+  row.innerHTML='';
+  glbls.forEach(function(l){
+    var isAct=kLblFilter===l;
+    var pill=document.createElement('span');
+    pill.className='lbl-pill'+(isAct?' act':'');
+    var chip=document.createElement('button');
+    chip.className='lbl-chip no-dot';
+    chip.textContent=l;
+    chip.addEventListener('click',function(){kLblFilter=kLblFilter===l?null:l;renderKol()});
+    var del=document.createElement('button');
+    del.className='lbl-del';
+    del.title='Hapus label';
+    del.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+    del.addEventListener('click',function(e){e.stopPropagation();deleteGlbl(l)});
+    pill.appendChild(chip);
+    pill.appendChild(del);
+    row.appendChild(pill);
+  });
+  var addBtn=document.createElement('button');
+  addBtn.className='lbl-add';
+  addBtn.onclick=function(){openOv('ov-lbl')};
+  var svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
+  svg.setAttribute('viewBox','0 0 24 24');svg.setAttribute('fill','none');
+  svg.setAttribute('stroke','currentColor');svg.setAttribute('stroke-width','2.5');
+  var l1=document.createElementNS('http://www.w3.org/2000/svg','line');
+  l1.setAttribute('x1','12');l1.setAttribute('y1','5');l1.setAttribute('x2','12');l1.setAttribute('y2','19');
+  var l2=document.createElementNS('http://www.w3.org/2000/svg','line');
+  l2.setAttribute('x1','5');l2.setAttribute('y1','12');l2.setAttribute('x2','19');l2.setAttribute('y2','12');
+  svg.appendChild(l1);svg.appendChild(l2);
+  addBtn.appendChild(svg);
+  addBtn.appendChild(document.createTextNode('Label'));
+  row.appendChild(addBtn);
+}
+function deleteGlbl(lbl){
+  showConfirm('Hapus Label?','Label akan dihapus dari semua konten.',function(){
+    glbls=glbls.filter(function(l){return l!==lbl});
+    S.set('glbls',glbls);
+    kolData.forEach(function(k){k.labels=(k.labels||[]).filter(function(l){return l!==lbl})});
+    S.set('kol',kolData);
+    if(kLblFilter===lbl)kLblFilter=null;
+    renderKol();
+    toast('Label dihapus','del');
+  },'Hapus');
+}
+function saveGlbl(){
+  const v=document.getElementById('glbl-in').value.trim();
+  if(!v){toast('Nama kosong','err');return}
+  if(!glbls.includes(v)){glbls.push(v);S.set('glbls',glbls)}
+  closeOv('ov-lbl');renderKol();toast('Label ditambahkan','ok');
+}
+
+function getStatus(item){
+  const p=item.platforms||[];
+  // If platforms exist, auto-calculate from them (ignore manual status)
+  if(p.length){
+    const done=p.filter(x=>x.done).length;
+    if(done===p.length&&done>0)return'done';
+    if(done>0)return'partial';
+    return'ready';
+  }
+  // No platforms — use manual status
+  return item.status||'ready';
+}
+function statusMeta(s){
+  return{
+    ready:{label:'Siap Upload',tag:'tag-gr'},
+    partial:{label:'Sebagian',tag:'tag-am'},
+    done:{label:'Diupload',tag:'tag-ac'}
+  }[s]||{label:s,tag:'tag-mu'};
+}
+function calcPct(item){const p=item.platforms||[];if(!p.length)return 0;return Math.round(p.filter(x=>x.done).length/p.length*100)}
+
+function renderKol(){
+  renderLblRow();
+  let data=[...kolData];
+  if(kFilter!=='all')data=data.filter(k=>getStatus(k)===kFilter);
+  if(kLblFilter)data=data.filter(k=>(k.labels||[]).includes(kLblFilter));
+  if(kSearch)data=data.filter(k=>
+    (k.title||'').toLowerCase().includes(kSearch)||
+    (k.caption||'').toLowerCase().includes(kSearch)||
+    (k.hook||'').toLowerCase().includes(kSearch)||
+    (k.labels||[]).some(l=>l.toLowerCase().includes(kSearch))
+  );
+  data.sort((a,b)=>{
+    if(kolSort==='schedule'){
+      // Items with schedule first (ascending), then no-schedule last
+      if(a.schedule&&b.schedule)return a.schedule-b.schedule;
+      if(a.schedule)return-1;if(b.schedule)return 1;
+      return b.createdAt-a.createdAt;
+    }
+    return b.createdAt-a.createdAt;
+  });
+  const body=document.getElementById('kol-body');
+  if(!data.length){
+    const msg=kSearch?`Tidak ada hasil untuk "<b>${esc(kSearch)}</b>"`:'Belum ada konten.<br>Tap + untuk tambah.';
+    body.innerHTML=`<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg><p>${msg}</p></div>`;return;
+  }
+  body.innerHTML=kolView==='grid'?`<div class="g2">${data.map(gridCard).join('')}</div>`:data.map(listCard).join('');
+  body.querySelectorAll('[data-kid]').forEach(el=>{
+    let lt,moved=false;
+    el.addEventListener('click',e=>{
+      if(e.target.closest('.g-act')||e.target.closest('.l-act'))return;
+      openKolView(el.dataset.kid);
+    });
+    el.addEventListener('touchstart',e=>{
+      moved=false;
+      lt=setTimeout(()=>{if(!moved){e.preventDefault();showCtx(el.dataset.kid,e.touches[0].clientX,e.touches[0].clientY);}},550);
+    },{passive:false});
+    el.addEventListener('touchmove',()=>{moved=true;clearTimeout(lt)},{passive:true});
+    el.addEventListener('touchend',()=>clearTimeout(lt),{passive:true});
+  });
+  body.querySelectorAll('[data-copy-cap]').forEach(el=>{
+    el.addEventListener('click',e=>{e.stopPropagation();const item=kolData.find(k=>k.id===el.dataset.copyCap);if(item&&item.caption)copyText(item.caption,'Caption disalin!');else toast('Tidak ada caption','warn')});
+  });
+  body.querySelectorAll('[data-bell]').forEach(el=>{
+    el.addEventListener('click',e=>{e.stopPropagation();const item=kolData.find(k=>k.id===el.dataset.bell);if(item)showSchedInfo(item)});
+  });
+}
+
+/* ══ CONTEXT MENU ══ */
+let _ctxId=null;
+function showCtx(id,x,y){
+  _ctxId=id;
+  const menu=document.getElementById('ctx-menu');
+  menu.style.left=Math.min(x,window.innerWidth-180)+'px';
+  menu.style.top=Math.min(y,window.innerHeight-180)+'px';
+  menu.classList.add('show');
+  document.getElementById('ctx-backdrop').classList.add('show');
+}
+function closeCtx(){
+  document.getElementById('ctx-menu').classList.remove('show');
+  document.getElementById('ctx-backdrop').classList.remove('show');
+  _ctxId=null;
+}
+function ctxEdit(){closeCtx();openKolSheet(_ctxId)}
+function ctxDelete(){
+  const id=_ctxId;closeCtx();
+  showConfirm('Hapus Konten?','Konten ini akan dihapus permanen.',()=>{
+    kolData=kolData.filter(k=>k.id!==id);S.set('kol',kolData);renderKol();toast('Dihapus','del');
+  },'Hapus');
+}
+function ctxCopyCap(){
+  const item=kolData.find(k=>k.id===_ctxId);closeCtx();
+  if(item&&item.caption)copyText(item.caption,'Caption disalin!');
+  else toast('Tidak ada caption','warn');
+}
+function ctxMarkAllDone(){
+  const item=kolData.find(k=>k.id===_ctxId);closeCtx();
+  if(!item)return;
+  (item.platforms||[]).forEach(p=>p.done=true);
+  S.set('kol',kolData);renderKol();toast('Semua platform selesai','ok');
+}
+
+function gridCard(item){
+  const s=getStatus(item),m=statusMeta(s),pct=calcPct(item);
+  const th=item.thumb?`<img src="${item.thumb}">`:`<div class="tip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg></div>`;
+  const lblHtml=(item.labels||[]).slice(0,2).map(l=>`<span class="tag tag-pu" style="font-size:9px;padding:2px 6px">${esc(l)}</span>`).join('');
+  const progCls=pct===100?'gr':pct>0?'am':'';
+  return`<div class="gc" data-kid="${item.id}">
+    <div class="gthumb">
+      ${th}
+      <div class="gstat"><span class="tag ${m.tag}" style="font-size:9px;padding:2px 7px">${m.label}</span></div>
+      ${lblHtml?`<div class="glbls">${lblHtml}</div>`:''}
+    </div>
+    <div class="ginfo">
+      <div class="gtitle">${esc(item.title)}</div>
+      ${item.schedule?`<div style="font-size:10px;color:var(--am);font-family:'DM Mono',monospace;margin-bottom:5px;display:flex;align-items:center;gap:3px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:10px;height:10px"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>${fdt(item.schedule)}</div>`:''}
+      <div class="pw" style="margin-bottom:8px"><div class="pb ${pct===100?'full':''}" style="width:${pct}%"></div></div>
+      <div class="g-btns">
+        ${item.caption?`<button class="g-act copy" data-copy-cap="${item.id}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Salin
+        </button>`:''}
+        <button class="g-act prog ${progCls}" style="pointer-events:none">${pct}%</button>
+        ${item.schedule?`<button class="g-act bell" data-bell="${item.id}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        </button>`:''}
+      </div>
+    </div>
+  </div>`;
+}
+
+function listCard(item){
+  const s=getStatus(item),m=statusMeta(s),pct=calcPct(item);
+  const th=item.thumb?`<img src="${item.thumb}">`:`<div class="tip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg></div>`;
+  const plats=(item.platforms||[]).map(p=>`<span class="pdot ${p.done?'pd-on':'pd-off'}">${esc(p.name)}</span>`).join('');
+  const lblHtml=(item.labels||[]).map(l=>`<span class="tag tag-pu" style="font-size:9px;padding:2px 5px">${esc(l)}</span>`).join('');
+  return`<div class="lc" data-kid="${item.id}">
+    <div class="lthumb">${th}</div>
+    <div class="lbody">
+      <div class="ltitle">${esc(item.title)}</div>
+      ${item.caption?`<div class="lcap">${esc(item.caption)}</div>`:''}
+      <div class="ltags">
+        <span class="tag ${m.tag}" style="font-size:9px;padding:2px 6px">${m.label}</span>${lblHtml}
+      </div>
+      ${item.schedule?`<div style="font-size:10px;color:var(--am);font-family:'DM Mono',monospace;display:flex;align-items:center;gap:3px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:10px;height:10px"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>${fdt(item.schedule)}</div>`:''}
+      <div class="lbottom">
+        <div class="pdots">${plats}</div>
+        <span class="lpct">${pct}%</span>
+      </div>
+      <div class="pw" style="margin-top:4px"><div class="pb ${pct===100?'full':''}" style="width:${pct}%"></div></div>
+      <div class="l-act-row" style="margin-top:6px">
+        ${item.caption?`<button class="l-act copy" data-copy-cap="${item.id}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Salin Caption
+        </button>`:''}
+        ${item.schedule?`<button class="l-act bell" data-bell="${item.id}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Jadwal
+        </button>`:''}
+      </div>
+    </div>
+  </div>`;
+}
+
+function showSchedInfo(item){
+  if(!item.schedule){toast('Belum ada jadwal upload','info',2500);return}
+  const lines=[`${fdt(item.schedule)}`];
+  if(item.notifNote)lines.push(item.notifNote);
+  toast(lines.join('  ·  '),'cal',3500);
+}
+
+/* ══ KOLEKSI SHEET ══ */
+function openKolSheet(id=null){
+  _editKolId=id;_kolLbls=[];_kolStatus='ready';_kolThumb=null;_vidEl=null;
+  // Reset video button label
+  const vidLbl=document.getElementById('vid-btn-lbl');
+  if(vidLbl)vidLbl.textContent='Video';
+  document.getElementById('sh-kol-t').textContent=id?'Edit Konten':'Konten Baru';
+  document.getElementById('kol-title').value='';
+  document.getElementById('kol-hook').value='';
+  document.getElementById('kol-cap').value='';
+  document.getElementById('kol-sched').value='';
+  document.getElementById('kol-notif-note').value='';
+  // reset thumb row
+  setThumbState('empty');
+  if(id){
+    const it=kolData.find(k=>k.id===id);
+    if(it){
+      document.getElementById('kol-title').value=it.title;
+      document.getElementById('kol-hook').value=it.hook||'';
+      document.getElementById('kol-cap').value=it.caption||'';
+      if(it.schedule)document.getElementById('kol-sched').value=new Date(it.schedule).toISOString().slice(0,16);
+      document.getElementById('kol-notif-note').value=it.notifNote||'';
+      _kolLbls=[...(it.labels||[])];_kolStatus=it.status||'ready';_kolThumb=it.thumb||null;
+      if(_kolThumb)setThumbState('image',null,_kolThumb);
+      window._eplats=(it.platforms||platforms.map(p=>({...p,done:false}))).map(p=>({...p}));
+    }
+  } else {
+    window._eplats=platforms.map(p=>({...p,done:false}));
+  }
+  renderKolStatBtns();renderKolLbls();renderKolPlats();openOv('ov-kol');
+}
+
+/* Thumb row state manager */
+function setThumbState(state, filename, src){
+  const img=document.getElementById('thumb-img');
+  const ico=document.getElementById('tp-ico');
+  const title=document.getElementById('thumb-meta-title');
+  const sub=document.getElementById('thumb-meta-sub');
+  const vidLbl=document.getElementById('vid-btn-lbl');
+  if(state==='empty'){
+    img.style.display='none';img.src='';
+    ico.style.display='flex';
+    title.textContent='Belum ada thumbnail';
+    sub.textContent='Pilih dari video atau galeri';
+    if(vidLbl)vidLbl.textContent='Video';
+  } else if(state==='image'){
+    img.src=src;img.style.display='block';
+    ico.style.display='none';
+    title.textContent='Thumbnail dipilih';
+    sub.textContent='Tap tombol untuk ganti';
+    if(vidLbl)vidLbl.textContent='Video';
+  } else if(state==='video'){
+    img.style.display='none';
+    ico.style.display='flex';
+    title.textContent=filename||'Video dipilih';
+    sub.textContent='Tap "Pilih Frame" untuk ambil thumbnail';
+    if(vidLbl)vidLbl.textContent='Pilih Frame';
+  }
+}
+function handleVidBtn(){
+  // If video loaded and awaiting frame pick, reopen frame picker directly
+  if(_vidEl){openFramePicker();}
+  else{document.getElementById('vid-in').click();}
+}
+
+function renderKolStatBtns(){
+  const map={ready:{lbl:'Siap Upload',tag:'tag-gr'},partial:{lbl:'Sebagian',tag:'tag-am'},done:{lbl:'Diupload',tag:'tag-ac'}};
+  const hasPlatforms=(window._eplats||[]).length>0;
+  const fg=document.getElementById('kol-stat-fg');
+  const note=document.getElementById('kol-stat-note');
+  if(hasPlatforms){
+    // Status auto-calculated from platforms — hide manual selector to avoid confusion
+    if(fg)fg.style.display='none';
+  } else {
+    if(fg)fg.style.display='';
+    document.getElementById('kol-stat-btns').innerHTML=Object.entries(map).map(([v,{lbl,tag}])=>
+      `<button class="btn btn-sm ${_kolStatus===v?tag:'btn-g'}" onclick="setKolStat('${v}')">${lbl}</button>`
+    ).join('');
+  }
+}
+function setKolStat(v){_kolStatus=v;renderKolStatBtns()}
+
+function renderKolLbls(){
+  // Label yang sudah dipilih
+  document.getElementById('kol-lbl-disp').innerHTML=_kolLbls.map((l,i)=>
+    `<span class="tag tag-pu" style="cursor:pointer;user-select:none" onclick="removeKolLbl(${i})">${esc(l)} ×</span>`
+  ).join('');
+  // Chip dari glbls yang belum dipilih — tap langsung tambah
+  const available=glbls.filter(l=>!_kolLbls.includes(l));
+  const chips=document.getElementById('kol-glbl-chips');
+  if(!chips)return;
+  if(!available.length){chips.innerHTML='';return}
+  chips.innerHTML='<span style="font-size:10px;color:var(--t3);font-weight:700;letter-spacing:.5px;align-self:center">TERSEDIA:</span>'+
+    available.map(l=>`<span class="tag tag-mu" style="cursor:pointer;user-select:none" onclick="pickKolLbl('${esc(l)}')">${esc(l)} +</span>`).join('');
+}
+function pickKolLbl(l){
+  if(!_kolLbls.includes(l))_kolLbls.push(l);
+  renderKolLbls();
+}
+function addKolLbl(){
+  const v=document.getElementById('kol-lbl-in').value.trim();if(!v)return;
+  if(!_kolLbls.includes(v))_kolLbls.push(v);
+  document.getElementById('kol-lbl-in').value='';renderKolLbls();
+  if(!glbls.includes(v)){glbls.push(v);S.set('glbls',glbls)}
+}
+function removeKolLbl(i){_kolLbls.splice(i,1);renderKolLbls()}
+
+function renderKolPlats(){
+  document.getElementById('kol-plat-list').innerHTML=(window._eplats||[]).map((p,i)=>`
+    <div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--b1)">
+      <div class="chk ${p.done?'on':''}" id="kp${i}" onclick="toggleKolPlat(${i})">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+      <span style="flex:1;font-size:13px;font-weight:600">${esc(p.name)}</span>
+      <span class="tag ${p.done?'tag-gr':'tag-mu'}" style="font-size:10px">${p.done?'Selesai':'Pending'}</span>
+    </div>
+  `).join('');
+}
+function toggleKolPlat(i){
+  window._eplats[i].done=!window._eplats[i].done;
+  document.getElementById('kp'+i).classList.toggle('on',window._eplats[i].done);
+  renderKolPlats();
+}
+
+/* ══ VIDEO / FRAME PICKER (modal terpisah) ══ */
+document.getElementById('vid-in').addEventListener('change',function(){
+  const file=this.files[0];if(!file)return;
+  const fname=file.name.length>24?file.name.slice(0,22)+'…':file.name;
+  setThumbState('video',fname);
+  // Load video silently, open frame picker
+  const vid=document.getElementById('frame-video');
+  vid.src=URL.createObjectURL(file);
+  vid.addEventListener('loadedmetadata',function onmeta(){
+    vid.removeEventListener('loadedmetadata',onmeta);
+    _vidEl=vid;
+    const slider=document.getElementById('frame-slider');
+    slider.max=Math.floor(vid.duration*10);
+    slider.value=Math.floor(vid.duration*0.5);
+    openFramePicker();
+    drawFrame(vid,parseFloat(slider.value)/10);
+  });
+  this.value='';
+});
+
+function openFramePicker(){
+  openOv('ov-frame');
+}
+function cancelFrame(){
+  closeOv('ov-frame');
+  // If no thumb was set yet, revert to empty
+  if(!_kolThumb){setThumbState('empty');_vidEl=null}
+}
+
+document.getElementById('frame-slider').addEventListener('input',function(){
+  if(!_vidEl)return;
+  const t=parseFloat(this.value)/10;
+  drawFrame(_vidEl,t);
+  const m=Math.floor(t/60),s=Math.floor(t%60);
+  document.getElementById('frame-time').textContent=m+':'+(s<10?'0'+s:s);
+});
+
+function drawFrame(vid,t){
+  vid.currentTime=t;
+  vid.addEventListener('seeked',function onSeeked(){
+    vid.removeEventListener('seeked',onSeeked);
+    const canvas=document.getElementById('frame-canvas');
+    const wrap=canvas.parentElement;
+    const W=vid.videoWidth||640,H=vid.videoHeight||360;
+    canvas.width=W;canvas.height=H;
+    canvas.style.width='100%';
+    canvas.style.height='auto';
+    const ctx=canvas.getContext('2d');
+    ctx.drawImage(vid,0,0,W,H);
+  });
+}
+
+function confirmFrame(){
+  const canvas=document.getElementById('frame-canvas');
+  _kolThumb=canvas.toDataURL('image/jpeg',0.85);
+  setThumbState('image',null,_kolThumb);
+  closeOv('ov-frame');
+  toast('Frame dipilih','ok');
+}
+
+/* Direct image upload */
+document.getElementById('img-in').addEventListener('change',function(){
+  const file=this.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    _kolThumb=e.target.result;
+    setThumbState('image',null,_kolThumb);
+    toast('Gambar dipilih','ok');
+  };
+  reader.readAsDataURL(file);this.value='';
+});
+
+function saveKol(){
+  const title=document.getElementById('kol-title').value.trim();
+  if(!title){toast('Judul wajib diisi','err');return}
+  const schedVal=document.getElementById('kol-sched').value;
+  const schedule=schedVal?new Date(schedVal).getTime():null;
+  const notifNote=document.getElementById('kol-notif-note').value.trim();
+  const hook=document.getElementById('kol-hook').value.trim();
+  const item={
+    id:_editKolId||uid(),title,
+    hook,
+    caption:document.getElementById('kol-cap').value.trim(),
+    status:_kolStatus,
+    labels:[..._kolLbls],
+    platforms:window._eplats.map(p=>({...p})),
+    thumb:_kolThumb,
+    schedule,notifNote,
+    createdAt:_editKolId?(kolData.find(k=>k.id===_editKolId)?.createdAt||Date.now()):Date.now()
+  };
+  if(_editKolId){const i=kolData.findIndex(k=>k.id===_editKolId);if(i>-1)kolData[i]=item;}else kolData.unshift(item);
+  const isNew=!_editKolId;
+  S.set('kol',kolData);closeOv('ov-kol');renderKol();
+  // Auto-increment target progress saat tambah konten baru
+  if(isNew){
+    const tk=tdKey();
+    if(!dayProg[tk])dayProg[tk]={done:0,target:0};
+    dayProg[tk].done=(dayProg[tk].done||0)+1;
+    dayProg[tk].target=Math.max(dayProg[tk].target||0,dayProg[tk].done);
+    // Simpan riwayat konten harian
+    if(!dayProg[tk].items)dayProg[tk].items=[];
+    dayProg[tk].items.push({id:item.id,title:item.title,ts:Date.now()});
+    S.set('dprog',dayProg);
+    if(curPage==='timeblock')renderTb();
+  }
+  toast(_editKolId?'Diperbarui':'Ditambahkan','ok');_editKolId=null;
+}
+
+/* ══ KOL VIEW ══ */
+let _vKolId=null;
+function openKolView(id){
+  _vKolId=id;
+  const it=kolData.find(k=>k.id===id);if(!it)return;
+  const s=getStatus(it),m=statusMeta(s),pct=calcPct(it);
+  const lbls=(it.labels||[]).map(l=>`<span class="tag tag-pu">${esc(l)}</span>`).join('');
+  const plats=(it.platforms||[]).map((p,i)=>`
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--b1)">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div class="chk ${p.done?'on':''}" onclick="toggleKvPlat('${id}',${i})" style="cursor:pointer">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <span style="font-size:14px;font-weight:700">${esc(p.name)}</span>
+      </div>
+      <span class="tag ${p.done?'tag-gr':'tag-mu'}" style="font-size:10px">${p.done?'Selesai':'Pending'}</span>
+    </div>
+  `).join('');
+  document.getElementById('kv-body').innerHTML=`
+    ${it.thumb?`<div class="kd-thumb"><img src="${it.thumb}"></div>`:''}
+    <div style="padding:16px">
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">
+        <span class="tag ${m.tag}">${m.label}</span>${lbls}
+      </div>
+      <div style="font-size:21px;font-weight:800;margin-bottom:8px;letter-spacing:-.3px" class="seltext">${esc(it.title)}</div>
+      ${it.hook?`
+        <div style="background:var(--acg);border:1px solid rgba(91,110,245,.2);border-radius:var(--rxs);padding:10px 12px;margin-bottom:12px;display:flex;align-items:flex-start;gap:8px">
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--ac2)" stroke-width="2" style="width:14px;height:14px;flex-shrink:0;margin-top:2px"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+          <span style="font-size:13px;color:var(--ac2);font-weight:600;line-height:1.5" class="seltext">${esc(it.hook)}</span>
+        </div>
+      `:''}
+      ${it.caption?`
+        <div style="font-size:14px;color:var(--t2);line-height:1.75;margin-bottom:12px" class="seltext">${esc(it.caption)}</div>
+        <button data-copy-kv-cap="1" class="btn btn-g btn-sm" style="margin-bottom:16px">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Salin Caption
+        </button>
+      `:''}
+      ${it.schedule?`<div class="tag tag-am" style="display:inline-flex;margin-bottom:8px;align-items:center;gap:4px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:11px;height:11px"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>${fdt(it.schedule)}</div><br>`:''}
+      ${it.notifNote?`<div style="font-size:12px;color:var(--t2);margin-bottom:16px;display:flex;align-items:center;gap:5px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px;flex-shrink:0"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="13" y2="17"/></svg>${esc(it.notifNote)}</div>`:''}
+      <div class="divider"></div>
+      <div class="sec-lbl">Progress Platform</div>
+      <div style="margin-bottom:10px">
+        <div style="display:flex;justify-content:space-between;margin-bottom:7px">
+          <span style="font-size:12px;color:var(--t2)">${pct}% selesai</span>
+          <span style="font-size:12px;color:var(--t3)" class="mono">${(it.platforms||[]).filter(p=>p.done).length}/${(it.platforms||[]).length}</span>
+        </div>
+        <div class="pw"><div class="pb ${pct===100?'full':''}" style="width:${pct}%"></div></div>
+      </div>
+      ${plats}
+      <div style="margin-top:16px;font-size:10px;color:var(--t3)" class="mono">Dibuat: ${fdate(it.createdAt)}</div>
+    </div>`;
+  const copyBtn=document.querySelector('[data-copy-kv-cap]');
+  if(copyBtn)copyBtn.addEventListener('click',()=>{const k=kolData.find(x=>x.id===_vKolId);if(k&&k.caption)copyText(k.caption,'Caption disalin!')});
+  openFsm('fsm-kol');
+}
+function editKolFromView(){closeFsm('fsm-kol');openKolSheet(_vKolId)}
+function deleteKolFromView(){
+  showConfirm('Hapus Konten?','Konten ini akan dihapus permanen.',()=>{
+    kolData=kolData.filter(k=>k.id!==_vKolId);S.set('kol',kolData);
+    closeFsm('fsm-kol');renderKol();toast('Dihapus','del');
+  },'Hapus');
+}
+function toggleKvPlat(kolId,i){
+  const it=kolData.find(k=>k.id===kolId);if(!it)return;
+  it.platforms[i].done=!it.platforms[i].done;
+  S.set('kol',kolData);openKolView(kolId);renderKol();
+  toast(it.platforms[i].done?'Selesai':'Dibatalkan',it.platforms[i].done?'ok':'undo');
+}
+
+/* ══ NOTES ══ */
+let _editNoteId=null,_noteLbls=[],_vNoteId=null,nLblFilter=null,nSearch='';
+
+function renderNoteLblRow(){
+  const row=document.getElementById('note-lbl-row');if(!row)return;
+  if(!noteLbls.length){row.innerHTML='';return;}
+  const chips=noteLbls.map(function(l){
+    const isAct=nLblFilter===l.name;
+    return '<span class="lbl-pill'+(isAct?' act':'')+'" data-lblname="'+esc(l.name)+'">'
+      +'<button class="lbl-dot-btn" data-dot-nlbl="'+esc(l.name)+'" title="Ubah warna"><span class="lbl-dot" style="background:var(--'+l.color+')"></span></button>'
+      +'<button class="lbl-chip" data-nlbl="'+esc(l.name)+'">'+esc(l.name)+'</button>'
+      +'<button class="lbl-del" data-del-nlbl="'+esc(l.name)+'" title="Hapus label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>'
+      +'</span>';
+  }).join('');
+  row.innerHTML=chips;
+  row.querySelectorAll('.lbl-chip').forEach(function(chip){
+    chip.addEventListener('click',function(){nLblFilter=nLblFilter===chip.dataset.nlbl?null:chip.dataset.nlbl;renderNotes()});
+  });
+  row.querySelectorAll('.lbl-dot-btn').forEach(function(btn){
+    btn.addEventListener('click',function(e){e.stopPropagation();openLblColorPicker(btn.dataset.dotNlbl)});
+  });
+  row.querySelectorAll('.lbl-del').forEach(function(btn){
+    btn.addEventListener('click',function(e){
+      e.stopPropagation();
+      var lbl=btn.dataset.delNlbl;
+      showConfirm('Hapus Label?','Label "'+lbl+'" akan dihapus dari semua notes.',function(){
+        noteLbls=noteLbls.filter(function(l){return l.name!==lbl});
+        S.set('noteLbls',noteLbls);
+        notesData.forEach(function(n){n.labels=(n.labels||[]).filter(function(l){return l!==lbl})});
+        S.set('notes',notesData);
+        if(nLblFilter===lbl)nLblFilter=null;
+        renderNotes();
+        toast('Label dihapus','del');
+      },'Hapus');
+    });
+  });
+}
+let _lblColorTarget=null;
+function openLblColorPicker(name){
+  _lblColorTarget=name;
+  const cur=noteLblColor(name);
+  document.getElementById('lcp-title').textContent='Warna Label "'+name+'"';
+  document.getElementById('lcp-swatches').innerHTML='<div class="lcp-grid">'+LBL_COLORS.map(c=>
+    `<button class="lcp-sw${c===cur?' act':''}" data-c="${c}" style="background:var(--${c})"></button>`
+  ).join('')+'</div>';
+  document.querySelectorAll('.lcp-sw').forEach(function(sw){
+    sw.addEventListener('click',function(){
+      const l=noteLbls.find(x=>x.name===_lblColorTarget);
+      if(l){l.color=sw.dataset.c;S.set('noteLbls',noteLbls);}
+      closeOv('ov-lblcolor');renderNoteLblRow();renderNotes();
+    });
+  });
+  openOv('ov-lblcolor');
+}
+// Note search handlers — set up once after DOM ready
+(function(){
+  const si=document.getElementById('note-search');
+  const sc=document.getElementById('note-search-clear');
+  if(si){
+    si.addEventListener('input',function(){
+      nSearch=this.value.trim().toLowerCase();
+      if(sc)sc.style.display=nSearch?'flex':'none';
+      renderNotes();
+    });
+  }
+})();
+function clearNoteSearch(){
+  nSearch='';
+  const si=document.getElementById('note-search');
+  const sc=document.getElementById('note-search-clear');
+  if(si)si.value='';
+  if(sc)sc.style.display='none';
+  renderNotes();
+}
+
+function renderNotes(){
+  renderNoteLblRow();
+  const body=document.getElementById('notes-body');
+  let data=notesData;
+  if(nLblFilter)data=data.filter(n=>(n.labels||[]).includes(nLblFilter));
+  if(nSearch)data=data.filter(n=>
+    (n.title||'').toLowerCase().includes(nSearch)||
+    (n.content||'').toLowerCase().includes(nSearch)
+  );
+  if(!data.length){
+    const msg=nSearch?`Tidak ada hasil untuk "<b>${esc(nSearch)}</b>"`:'Belum ada notes.<br>Tap + untuk mulai.';
+    body.innerHTML=`<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><p>${msg}</p></div>`;return;
+  }
+  const pinned=data.filter(n=>n.pinned).sort((a,b)=>b.createdAt-a.createdAt);
+  const rest=data.filter(n=>!n.pinned).sort((a,b)=>b.createdAt-a.createdAt);
+  let html='';
+  if(pinned.length)html+=`<div class="pin-sep"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17H19V15L17 12V5H7V12L5 15V17Z"/><line x1="12" y1="5" x2="12" y2="3"/></svg>Disematkan</div><div class="ng" style="margin-bottom:14px">${pinned.map(noteCard).join('')}</div>`;
+  if(rest.length){if(pinned.length)html+=`<div class="divider"></div>`;html+=`<div class="ng">${rest.map(noteCard).join('')}</div>`;}
+  body.innerHTML=html;
+  body.querySelectorAll('[data-nid]').forEach(el=>{
+    let lt,moved=false;
+    el.addEventListener('click',()=>openNoteView(el.dataset.nid));
+    el.addEventListener('touchstart',e=>{
+      moved=false;
+      lt=setTimeout(()=>{if(!moved){e.preventDefault();showNoteCtx(el.dataset.nid,e.touches[0].clientX,e.touches[0].clientY);}},550);
+    },{passive:false});
+    el.addEventListener('touchmove',()=>{moved=true;clearTimeout(lt)},{passive:true});
+    el.addEventListener('touchend',()=>clearTimeout(lt),{passive:true});
+  });
+}
+function noteCard(n){
+  const prev=n.content.replace(/\[x\]/gi,'[v]').replace(/\[ \]/g,'[ ]');
+  const lbls=(n.labels||[]).map(l=>`<span class="tag tag-${noteLblColor(l)}" style="font-size:9px;padding:2px 6px">${esc(l)}</span>`).join('');
+  return`<div class="nc ${n.pinned?'pin':''}" data-nid="${n.id}">
+    ${n.pinned?`<div class="nc-pin"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17H19V15L17 12V5H7V12L5 15V17Z"/><line x1="12" y1="5" x2="12" y2="3"/></svg></div>`:''}
+    <div class="nc-title">${esc(n.title)}</div>
+    <div class="nc-prev">${esc(prev)}</div>
+    ${lbls?`<div class="nc-tags">${lbls}</div>`:''}
+    <div class="nc-date">${fdate(n.createdAt)}</div>
+  </div>`;
+}
+
+function openNoteSheet(id=null){
+  _editNoteId=id;_noteLbls=[];
+  document.getElementById('sh-note-t').textContent=id?'Edit Note':'Note Baru';
+  document.getElementById('note-title').value='';
+  document.getElementById('note-content').value='';
+  if(id){const n=notesData.find(x=>x.id===id);if(n){document.getElementById('note-title').value=n.title;document.getElementById('note-content').value=n.content;_noteLbls=[...(n.labels||[])]}}
+  renderNoteLbls();openOv('ov-note');
+}
+function renderNoteLbls(){
+  document.getElementById('note-lbl-disp').innerHTML=_noteLbls.map((l,i)=>
+    `<span class="tag tag-${noteLblColor(l)}" style="cursor:pointer" onclick="removeNoteLbl(${i})">${esc(l)} ×</span>`
+  ).join('');
+  const available=noteLbls.filter(l=>!_noteLbls.includes(l.name));
+  const chips=document.getElementById('note-glbl-chips');
+  if(!chips)return;
+  if(!available.length){chips.innerHTML='';return}
+  chips.innerHTML='<span style="font-size:10px;color:var(--t3);font-weight:700;letter-spacing:.5px;align-self:center">TERSEDIA:</span>'+
+    available.map(l=>`<span class="tag tag-${l.color}" style="cursor:pointer" onclick="pickNoteLbl('${esc(l.name)}')">${esc(l.name)} +</span>`).join('');
+}
+function pickNoteLbl(l){
+  if(!_noteLbls.includes(l))_noteLbls.push(l);
+  renderNoteLbls();
+}
+function addNoteLbl(){
+  const v=document.getElementById('note-lbl-in').value.trim();if(!v)return;
+  if(!_noteLbls.includes(v))_noteLbls.push(v);
+  document.getElementById('note-lbl-in').value='';renderNoteLbls();
+  if(!noteLbls.find(l=>l.name===v)){
+    const usedColors=noteLbls.map(l=>l.color);
+    const nextColor=LBL_COLORS.find(c=>!usedColors.includes(c))||LBL_COLORS[noteLbls.length%LBL_COLORS.length];
+    noteLbls.push({name:v,color:nextColor});S.set('noteLbls',noteLbls);
+  }
+}
+function removeNoteLbl(i){_noteLbls.splice(i,1);renderNoteLbls()}
+
+function saveNote(){
+  const title=document.getElementById('note-title').value.trim();
+  if(!title){toast('Judul wajib diisi','err');return}
+  const note={
+    id:_editNoteId||uid(),title,
+    content:document.getElementById('note-content').value.trim(),
+    labels:[..._noteLbls],
+    pinned:_editNoteId?(notesData.find(n=>n.id===_editNoteId)?.pinned||false):false,
+    createdAt:_editNoteId?(notesData.find(n=>n.id===_editNoteId)?.createdAt||Date.now()):Date.now(),
+    updatedAt:Date.now()
+  };
+  if(_editNoteId){const i=notesData.findIndex(n=>n.id===_editNoteId);if(i>-1)notesData[i]=note;}else notesData.unshift(note);
+  S.set('notes',notesData);closeOv('ov-note');renderNotes();
+  toast(_editNoteId?'Diperbarui':'Ditambahkan','ok');_editNoteId=null;
+}
+
+function openNoteView(id){
+  _vNoteId=id;
+  const n=notesData.find(x=>x.id===id);if(!n)return;
+  document.getElementById('nv-pin-btn').textContent=n.pinned?'Unpin':'Pin';
+  const lbls=(n.labels||[]).map(l=>`<span class="tag tag-${noteLblColor(l)}">${esc(l)}</span>`).join('');
+  let contentHtml='';
+  n.content.split('\n').forEach((line,li)=>{
+    const t=line.trim();
+    if(/^\[[ x]\]/i.test(t)){
+      const checked=/^\[x\]/i.test(t);
+      const txt=t.replace(/^\[[ x]\]\s*/i,'');
+      contentHtml+=`<div style="display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:1px solid var(--b1)">
+        <div class="chk ${checked?'on':''}" data-chk-line="${li}" onclick="toggleNoteChk(this,${li})" style="margin-top:1px;cursor:pointer">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <span style="font-size:14px;${checked?'text-decoration:line-through;color:var(--t3)':''}">${esc(txt)}</span>
+      </div>`;
+    } else {
+      contentHtml+=`<p style="font-size:14px;color:var(--t2);line-height:1.8;margin-bottom:3px">${esc(line)||'&nbsp;'}</p>`;
+    }
+  });
+  document.getElementById('nv-body').innerHTML=`
+    ${lbls?`<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">${lbls}</div>`:''}
+    <div style="font-size:22px;font-weight:800;line-height:1.2;margin-bottom:6px;letter-spacing:-.3px">${esc(n.title)}</div>
+    <div style="font-size:11px;color:var(--t3);margin-bottom:20px" class="mono">${fdate(n.createdAt)}</div>
+    <div>${contentHtml}</div>`;
+  openFsm('fsm-note');
+}
+function toggleNoteChk(el,lineIdx){
+  const n=notesData.find(x=>x.id===_vNoteId);if(!n)return;
+  const lines=n.content.split('\n');if(lineIdx>=lines.length)return;
+  const wasChecked=/^\[x\]/i.test(lines[lineIdx].trim());
+  lines[lineIdx]=lines[lineIdx].replace(/^\[[ x]\]/i,wasChecked?'[ ]':'[x]');
+  n.content=lines.join('\n');S.set('notes',notesData);
+  el.classList.toggle('on',!wasChecked);
+  const span=el.nextElementSibling;
+  if(span){span.style.textDecoration=!wasChecked?'line-through':'';span.style.color=!wasChecked?'var(--t3)':''}
+}
+function copyNoteContent(){const n=notesData.find(x=>x.id===_vNoteId);if(n)copyText(n.content,'Isi note disalin!')}
+
+/* Note context menu */
+let _noteCtxId=null;
+function showNoteCtx(id,x,y){
+  _noteCtxId=id;
+  const n=notesData.find(x=>x.id===id);
+  if(n)document.getElementById('note-ctx-pin-lbl').textContent=n.pinned?'Unpin':'Pin';
+  const menu=document.getElementById('note-ctx-menu');
+  menu.style.left=Math.min(x,window.innerWidth-180)+'px';
+  menu.style.top=Math.min(y,window.innerHeight-180)+'px';
+  menu.classList.add('show');
+  document.getElementById('note-ctx-backdrop').classList.add('show');
+}
+function closeNoteCtx(){
+  document.getElementById('note-ctx-menu').classList.remove('show');
+  document.getElementById('note-ctx-backdrop').classList.remove('show');
+  _noteCtxId=null;
+}
+function noteCtxEdit(){const id=_noteCtxId;closeNoteCtx();openNoteSheet(id)}
+function noteCtxDelete(){
+  const id=_noteCtxId;closeNoteCtx();
+  showConfirm('Hapus Note?','Note ini akan dihapus permanen.',()=>{
+    notesData=notesData.filter(n=>n.id!==id);S.set('notes',notesData);renderNotes();toast('Dihapus','del');
+  },'Hapus');
+}
+function noteCtxPin(){
+  const n=notesData.find(x=>x.id===_noteCtxId);closeNoteCtx();
+  if(!n)return;n.pinned=!n.pinned;S.set('notes',notesData);renderNotes();
+  toast(n.pinned?'Disematkan':'Pin dilepas','pin');
+}
+function noteCtxCopy(){
+  const n=notesData.find(x=>x.id===_noteCtxId);closeNoteCtx();
+  if(n&&n.content)copyText(n.content,'Isi note disalin!');else toast('Note kosong','warn');
+}
+function togglePin(){
+  const n=notesData.find(x=>x.id===_vNoteId);if(!n)return;
+  n.pinned=!n.pinned;S.set('notes',notesData);
+  openNoteView(_vNoteId);renderNotes();toast(n.pinned?'Disematkan':'Pin dilepas','pin');
+}
+function editNoteFromView(){closeFsm('fsm-note');openNoteSheet(_vNoteId)}
+function deleteNoteFromView(){
+  showConfirm('Hapus Note?','Note ini akan dihapus permanen.',()=>{
+    notesData=notesData.filter(n=>n.id!==_vNoteId);S.set('notes',notesData);
+    closeFsm('fsm-note');renderNotes();toast('Dihapus','del');
+  },'Hapus');
+}
+
+/* ══ TIMEBLOCK ══ */
+const DAYS=['Min','Sen','Sel','Rab','Kam','Jum','Sab'];
+const COLORS=['#5b6ef5','#2db87a','#e8a020','#e05555','#9b6ef5','#e06eb0','#22c0d8'];
+let curDay=new Date().getDay();
+let _editTbId=null,_tbColor=COLORS[0],_tbLink=false,_tbDays=[0,1,2,3,4,5,6];
+
+function renderTb(){
+  const today=new Date().getDay();
+  document.getElementById('day-tabs').innerHTML=DAYS.map((d,i)=>
+    `<button class="dt ${i===curDay?'act':''}" onclick="setDay(${i})">${d}<span class="dt-sub">${i===today?'Hari ini':''}</span></button>`
+  ).join('');
+  const tk=tdKey(curDay);const dp=dayProg[tk]||{done:0,target:0};
+  const pct=dp.target>0?Math.min(100,Math.round(dp.done/dp.target*100)):0;
+  const bar=document.getElementById('tgt-bar');bar.style.width=pct+'%';bar.className='pb'+(pct>=100?' full':'');
+  const tgtVal=document.getElementById('tgt-val');if(tgtVal)tgtVal.textContent=dp.done+' / '+dp.target;
+  const blocks=tbData.filter(b=>b.days.includes(curDay)).sort((a,b)=>a.start.localeCompare(b.start));
+  const list=document.getElementById('tb-list');
+  if(!blocks.length){list.innerHTML=`<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><p>Belum ada jadwal.<br>Tap + untuk tambah blok.</p></div>`;return}
+  list.innerHTML=blocks.map(renderTbItem).join('');
+  list.querySelectorAll('[data-tbid]').forEach(el=>{
+    el.querySelector('.tb-hd').addEventListener('click',()=>toggleTbPanel(el.dataset.tbid));
+  });
+}
+
+function renderTbItem(b){
+  const tasks=b.tasks||[];const done=tasks.filter(t=>t.done).length;
+  return`<div class="tb-item" data-tbid="${b.id}">
+    <div class="tb-time">${b.start}<br>${b.end}</div>
+    <div class="tb-body">
+      <div class="tb-hd">
+        <div class="tb-col" style="background:${b.color}"></div>
+        <div class="tb-info">
+          <div class="tb-name">${esc(b.name)}</div>
+          <div class="tb-sub">${tasks.length?done+'/'+tasks.length+' task':'Tap untuk tambah task'}</div>
+        </div>
+        <div class="tb-actions">
+          <button class="tba" onclick="event.stopPropagation();openTbSheet('${b.id}')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          </button>
+          <button class="tba" onclick="event.stopPropagation();deleteTb('${b.id}')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+          </button>
+          <div class="tb-arr" id="arr-${b.id}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg></div>
+        </div>
+      </div>
+      <div class="tb-tasks" id="tbp-${b.id}">
+        ${tasks.map((t,i)=>`
+          <div class="tbt-item">
+            <div class="chk ${t.done?'on':''}" onclick="toggleTask('${b.id}',${i})" style="cursor:pointer">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+            <span class="tbt-txt ${t.done?'done':''}">${esc(t.text)}</span>
+            <button class="tbt-del" onclick="deleteTask('${b.id}',${i})">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+        `).join('')}
+        <div class="tb-add-row">
+          <input type="text" id="tbadd-${b.id}" placeholder="Tambah task..." style="font-size:12px;padding:7px 10px">
+          <button class="btn btn-p btn-sm" onclick="addTask('${b.id}')" style="flex-shrink:0">+</button>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function toggleTbPanel(id){
+  const panel=document.getElementById('tbp-'+id);
+  const arr=document.getElementById('arr-'+id);
+  if(!panel)return;
+  const open=panel.classList.toggle('open');
+  if(arr)arr.classList.toggle('open',open);
+}
+
+function setDay(d){curDay=d;renderTb();const pg=document.getElementById('pg-timeblock');if(pg)pg.scrollTo({top:0,behavior:'smooth'})}
+function promptTgt(){
+  const tk=tdKey(curDay);const dp=dayProg[tk]||{done:0,target:0};
+  document.getElementById('tgt-in').value=dp.target||dp.done||0;
+  openOv('ov-tgt');
+  setTimeout(()=>document.getElementById('tgt-in').focus(),300);
+}
+function saveTgt(){
+  const v=parseInt(document.getElementById('tgt-in').value);
+  if(isNaN(v)||v<1){toast('Target tidak valid','err');return}
+  const tk=tdKey(curDay);
+  if(!dayProg[tk])dayProg[tk]={done:0,target:10};
+  dayProg[tk].target=v;S.set('dprog',dayProg);
+  closeOv('ov-tgt');renderTb();toast('Target diperbarui','tgt');
+}
+function addTask(id){
+  const input=document.getElementById('tbadd-'+id);
+  const text=input.value.trim();if(!text)return;
+  const b=tbData.find(x=>x.id===id);if(!b)return;
+  if(!b.tasks)b.tasks=[];b.tasks.push({text,done:false});input.value='';
+  S.set('tb',tbData);renderTb();
+  setTimeout(()=>{const p=document.getElementById('tbp-'+id);const a=document.getElementById('arr-'+id);if(p){p.classList.add('open');if(a)a.classList.add('open')}},50);
+}
+function toggleTask(id,i){
+  const b=tbData.find(x=>x.id===id);if(!b)return;
+  b.tasks[i].done=!b.tasks[i].done;
+  if(b.linkedToProgress){
+    const tk=tdKey(curDay);if(!dayProg[tk])dayProg[tk]={done:0,target:b.targetNum||10};
+    // Fix 10: recalculate done count properly (handles deletions too)
+    dayProg[tk].done=tbData.filter(x=>x.linkedToProgress).reduce((s,x)=>s+(x.tasks||[]).filter(t=>t.done).length,0);
+    S.set('dprog',dayProg);
+    if(b.tasks[i].done)toast('+1 progres konten','pkg');
+  }
+  S.set('tb',tbData);renderTb();
+  setTimeout(()=>{const p=document.getElementById('tbp-'+id);const a=document.getElementById('arr-'+id);if(p){p.classList.add('open');if(a)a.classList.add('open')}},50);
+}
+function deleteTask(id,i){
+  const b=tbData.find(x=>x.id===id);if(!b)return;
+  // Fix 10: if task was done and linked, recalc progress after deletion
+  const wasDone=b.tasks[i].done;
+  b.tasks.splice(i,1);
+  if(wasDone&&b.linkedToProgress){
+    const tk=tdKey(curDay);if(!dayProg[tk])dayProg[tk]={done:0,target:b.targetNum||10};
+    dayProg[tk].done=tbData.filter(x=>x.linkedToProgress).reduce((s,x)=>s+(x.tasks||[]).filter(t=>t.done).length,0);
+    S.set('dprog',dayProg);
+  }
+  S.set('tb',tbData);renderTb();
+  setTimeout(()=>{const p=document.getElementById('tbp-'+id);if(p)p.classList.add('open')},50);
+}
+function deleteTb(id){
+  showConfirm('Hapus Blok?','Blok dan semua task akan dihapus.',()=>{
+    tbData=tbData.filter(b=>b.id!==id);S.set('tb',tbData);renderTb();toast('Dihapus','del');
+  },'Hapus');
+}
+
+function openTbSheet(id=null){
+  _editTbId=id;_tbLink=false;_tbColor=COLORS[0];_tbDays=[0,1,2,3,4,5,6];
+  document.getElementById('sh-tb-t').textContent=id?'Edit Blok':'Blok Waktu Baru';
+  document.getElementById('tb-name').value='';
+  document.getElementById('tb-start').value='09:00';
+  document.getElementById('tb-end').value='10:00';
+  document.getElementById('tb-tgt-num').value='10';
+  document.getElementById('tb-tgt-grp').style.display='none';
+  document.getElementById('tb-link-chk').classList.remove('on');
+  if(id){
+    const b=tbData.find(x=>x.id===id);
+    if(b){
+      document.getElementById('tb-name').value=b.name;
+      document.getElementById('tb-start').value=b.start;
+      document.getElementById('tb-end').value=b.end;
+      _tbColor=b.color;_tbLink=b.linkedToProgress||false;
+      _tbDays=b.days?[...b.days]:[0,1,2,3,4,5,6];
+      if(_tbLink){document.getElementById('tb-link-chk').classList.add('on');document.getElementById('tb-tgt-grp').style.display='block';document.getElementById('tb-tgt-num').value=b.targetNum||10}
+    }
+  }
+  renderColorPicks();renderDayPicks();openOv('ov-tb');
+}
+function renderColorPicks(){
+  document.getElementById('tb-colors').innerHTML=COLORS.map(c=>
+    `<div style="width:28px;height:28px;border-radius:8px;background:${c};cursor:pointer;border:2px solid ${c===_tbColor?'#fff':'transparent'};transition:border .15s;flex-shrink:0" onclick="selectColor('${c}')"></div>`
+  ).join('');
+}
+function selectColor(c){_tbColor=c;renderColorPicks();renderDayPicks()}
+function renderDayPicks(){
+  document.getElementById('tb-day-picks').innerHTML=DAYS.map((d,i)=>
+    `<div onclick="toggleTbDay(${i})" style="width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:11px;font-weight:700;border:2px solid ${_tbDays.includes(i)?_tbColor:'var(--b2)'};background:${_tbDays.includes(i)?_tbColor+'22':'transparent'};color:${_tbDays.includes(i)?_tbColor:'var(--t3)'};transition:all .15s">${d}</div>`
+  ).join('');
+}
+function toggleTbDay(i){
+  if(_tbDays.includes(i))_tbDays=_tbDays.filter(d=>d!==i);else _tbDays.push(i);
+  renderDayPicks();
+}
+function toggleTbLink(){
+  _tbLink=!_tbLink;
+  document.getElementById('tb-link-chk').classList.toggle('on',_tbLink);
+  document.getElementById('tb-tgt-grp').style.display=_tbLink?'block':'none';
+}
+function saveTb(){
+  const name=document.getElementById('tb-name').value.trim();
+  if(!name){toast('Nama wajib diisi','err');return}
+  if(!_tbDays.length){toast('Pilih minimal 1 hari','err');return}
+  const b={
+    id:_editTbId||uid(),name,
+    start:document.getElementById('tb-start').value,
+    end:document.getElementById('tb-end').value,
+    color:_tbColor,
+    days:[..._tbDays],
+    linkedToProgress:_tbLink,
+    targetNum:_tbLink?parseInt(document.getElementById('tb-tgt-num').value)||10:null,
+    tasks:_editTbId?(tbData.find(x=>x.id===_editTbId)?.tasks||[]):[]
+  };
+  if(_editTbId){const i=tbData.findIndex(x=>x.id===_editTbId);if(i>-1)tbData[i]=b;}else tbData.push(b);
+  if(_tbLink){const tk=tdKey(curDay);if(!dayProg[tk])dayProg[tk]={done:0,target:b.targetNum};dayProg[tk].target=b.targetNum;S.set('dprog',dayProg)}
+  S.set('tb',tbData);closeOv('ov-tb');renderTb();
+  toast(_editTbId?'Diperbarui':'Ditambahkan','ok');_editTbId=null;
+}
+
+/* ══ SETTINGS ══ */
+function renderSettings(){
+  const used=(JSON.stringify(localStorage).length/1024).toFixed(1);
+  document.getElementById('settings-body').innerHTML=`
+    <div class="sg">
+      <div class="sg-title">Tampilan</div>
+      <div class="si" onclick="toggleTheme()">
+        <div class="si-m"><div class="si-lbl">Mode Tampilan</div><div class="si-sub" id="theme-sub-lbl">${cfg.theme==='light'?'Mode Terang':'Mode Gelap'}</div></div>
+        <div class="si-r" id="theme-si-icon">
+          ${cfg.theme==='light'
+            ?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>'
+            :'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>'
+          }
+        </div>
+      </div>
+    </div>
+    <div class="sg">
+      <div class="sg-title">Platform</div>
+      <div class="si" onclick="openPlatMgr()">
+        <div class="si-m"><div class="si-lbl">Kelola Platform</div><div class="si-sub">${platforms.map(p=>p.name).join(', ')}</div></div>
+        <div class="si-r"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div>
+      </div>
+    </div>
+    <div class="sg">
+      <div class="sg-title">Data</div>
+      <div class="si" onclick="doBackup()">
+        <div class="si-m"><div class="si-lbl">Backup Data</div><div class="si-sub">Export semua ke JSON</div></div>
+        <div class="si-r"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div>
+      </div>
+      <div class="si" id="restore-si">
+        <div class="si-m"><div class="si-lbl">Restore Data</div><div class="si-sub">Import dari file backup</div></div>
+        <div class="si-r"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div>
+        <input type="file" id="restore-in" accept=".json" style="position:absolute;opacity:0;width:1px;height:1px">
+      </div>
+      <div class="si">
+        <div class="si-m"><div class="si-lbl">Storage Digunakan</div><div class="si-sub">~${used} KB</div></div>
+      </div>
+    </div>
+    <div class="sg">
+      <div class="sg-title" style="color:var(--rd)">Bahaya</div>
+      <div class="si" onclick="confirmClear()">
+        <div class="si-m"><div class="si-lbl" style="color:var(--rd)">Hapus Semua Data</div><div class="si-sub">Tidak bisa dikembalikan</div></div>
+        <div class="si-r"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div>
+      </div>
+    </div>
+    <div style="text-align:center;padding:24px;color:var(--t3);font-size:11px" class="mono">CLIPS TRACKING By Qii</div>`;
+  document.getElementById('restore-si').onclick=()=>document.getElementById('restore-in').click();
+  document.getElementById('restore-in').onchange=function(){
+    const file=this.files[0];if(!file)return;
+    const reader=new FileReader();
+    reader.onload=e=>{
+      try{
+        const d=JSON.parse(e.target.result);
+        showConfirm('Restore Backup?','Data saat ini akan diganti dengan data dari file backup.',()=>{
+          if(d.kol){kolData=d.kol;S.set('kol',kolData)}
+          if(d.notes){notesData=d.notes;S.set('notes',notesData)}
+          if(d.tb){tbData=d.tb;S.set('tb',tbData)}
+          if(d.plats){platforms=d.plats;S.set('plats',platforms)}
+          if(d.glbls){glbls=d.glbls;S.set('glbls',glbls)}
+          if(d.noteLbls){noteLbls=d.noteLbls;S.set('noteLbls',noteLbls)}
+          if(d.dprog){dayProg=d.dprog;S.set('dprog',dayProg)}
+          if(d.cfg){cfg=d.cfg;S.set('cfg',cfg)}
+          toast('Data di-restore!','ok');renderSettings();
+        },'Restore');
+      }catch{toast('File tidak valid','err')}
+    };
+    reader.readAsText(file);this.value='';
+  };
+}
+function doBackup(){
+  const d={kol:kolData,notes:notesData,tb:tbData,plats:platforms,glbls,noteLbls,cfg,dprog:dayProg,date:new Date().toISOString()};
+  const json=JSON.stringify(d,null,2);
+  const filename='clips-tracking-backup-'+new Date().toLocaleDateString('id-ID').replace(/\//g,'-')+'.json';
+  // File System Access API — bisa pilih folder tujuan
+  if('showSaveFilePicker' in window){
+    window.showSaveFilePicker({
+      suggestedName:filename,
+      types:[{description:'JSON Backup',accept:{'application/json':['.json']}}],
+      startIn:'documents'
+    }).then(function(fh){
+      return fh.createWritable().then(function(w){
+        return w.write(json).then(function(){return w.close()});
+      });
+    }).then(function(){toast('Backup disimpan!','dl')})
+    .catch(function(e){if(e.name!=='AbortError')_fallbackDownload(json,filename)});
+  } else {
+    _fallbackDownload(json,filename);
+  }
+}
+function _fallbackDownload(json,filename){
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([json],{type:'application/json'}));
+  a.download=filename;a.click();toast('Backup diunduh','dl');
+}
+function confirmClear(){showConfirm('Hapus Semua Data?','SEMUA data akan dihapus permanen dan tidak bisa dikembalikan!',()=>{localStorage.clear();location.reload()},'Hapus Semua')}
+function openPlatMgr(){renderPlatList();openOv('ov-plat')}
+function renderPlatList(){
+  document.getElementById('plat-list').innerHTML=platforms.map((p,i)=>`
+    <div style="display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--b1)">
+      <span style="flex:1;font-weight:700;font-size:14px">${esc(p.name)}</span>
+      ${i<2?'<span class="tag tag-mu" style="font-size:10px">Default</span>':`<button class="btn btn-d btn-sm" onclick="removePlat(${i})">Hapus</button>`}
+    </div>
+  `).join('');
+}
+function addPlat(){
+  const v=document.getElementById('new-plat-in').value.trim();if(!v)return;
+  platforms.push({id:uid(),name:v});S.set('plats',platforms);
+  document.getElementById('new-plat-in').value='';renderPlatList();toast('Ditambahkan','ok');
+}
+function removePlat(i){platforms.splice(i,1);S.set('plats',platforms);renderPlatList();toast('Dihapus','del')}
+
+/* ══ HISTORY ══ */
+let _histTab='daily';
+function showHistory(){_histTab='daily';renderHistory();openOv('ov-hist')}
+function setHistTab(t){
+  _histTab=t;
+  document.querySelectorAll('#hist-tab-row .sf').forEach(b=>b.classList.toggle('act',b.dataset.ht===t));
+  renderHistory();
+}
+function renderHistory(){
+  const body=document.getElementById('hist-body');if(!body)return;
+  const now=new Date();
+  let rows=[];
+  if(_histTab==='daily'){
+    for(let i=0;i<30;i++){
+      const d=new Date(now);d.setDate(d.getDate()-i);
+      const k=d.getFullYear()+'-'+d.getMonth()+'-'+d.getDate();
+      const dp=dayProg[k];
+      if(dp&&(dp.done>0||dp.target>0)){
+        const pct=dp.target>0?Math.min(100,Math.round(dp.done/dp.target*100)):0;
+        const dayLabel=i===0?'Hari ini':i===1?'Kemarin':d.toLocaleDateString('id-ID',{weekday:'short',day:'numeric',month:'short'});
+        rows.push({label:dayLabel,done:dp.done,target:dp.target,pct,items:dp.items||[]});
+      }
+    }
+  } else if(_histTab==='weekly'){
+    for(let w=0;w<8;w++){
+      let wDone=0,wTarget=0,wItems=[];
+      for(let d2=0;d2<7;d2++){
+        const dayOff=w*7+d2;
+        const dd=new Date(now);dd.setDate(dd.getDate()-dayOff);
+        const k=dd.getFullYear()+'-'+dd.getMonth()+'-'+dd.getDate();
+        const dp=dayProg[k];
+        if(dp){wDone+=dp.done||0;wTarget+=dp.target||0;wItems=wItems.concat(dp.items||[]);}
+      }
+      if(wDone>0||wTarget>0){
+        const startD=new Date(now);startD.setDate(startD.getDate()-w*7-6);
+        const endD=new Date(now);endD.setDate(endD.getDate()-w*7);
+        const label=w===0?'Minggu ini':startD.toLocaleDateString('id-ID',{day:'numeric',month:'short'})+' – '+endD.toLocaleDateString('id-ID',{day:'numeric',month:'short'});
+        const pct=wTarget>0?Math.min(100,Math.round(wDone/wTarget*100)):0;
+        rows.push({label,done:wDone,target:wTarget,pct,items:wItems});
+      }
+    }
+  } else {
+    for(let m=0;m<6;m++){
+      const mDate=new Date(now.getFullYear(),now.getMonth()-m,1);
+      let mDone=0,mTarget=0,mItems=[];
+      Object.keys(dayProg).forEach(function(k){
+        const parts=k.split('-');
+        if(parts.length===3&&parseInt(parts[0])===mDate.getFullYear()&&parseInt(parts[1])===(mDate.getMonth()+1)){
+          const dp=dayProg[k];
+          mDone+=dp.done||0;mTarget+=dp.target||0;mItems=mItems.concat(dp.items||[]);
+        }
+      });
+      if(mDone>0||mTarget>0){
+        const label=m===0?'Bulan ini':mDate.toLocaleDateString('id-ID',{month:'long',year:'numeric'});
+        const pct=mTarget>0?Math.min(100,Math.round(mDone/mTarget*100)):0;
+        rows.push({label,done:mDone,target:mTarget,pct,items:mItems});
+      }
+    }
+  }
+  if(!rows.length){body.innerHTML='<div class="empty"><p>Belum ada riwayat konten.</p></div>';return;}
+  body.innerHTML=rows.map(function(r){
+    const itemsHtml=r.items.length
+      ?'<details style="font-size:11px;color:var(--t3)"><summary style="cursor:pointer;font-weight:700;color:var(--t2)">'+r.items.length+' konten ditambahkan</summary><div style="margin-top:6px;display:flex;flex-direction:column;gap:3px">'+r.items.map(function(it){return '<span>• '+esc(it.title)+'</span>';}).join('')+'</div></details>'
+      :'';
+    const barCls='pb'+(r.pct>=100?' full':'');
+    const scoreColor=r.pct>=100?'var(--gr)':'var(--t2)';
+    return '<div style="background:var(--s2);border:1px solid var(--b1);border-radius:var(--rsm);padding:12px;margin-bottom:10px">'
+      +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">'
+      +'<span style="font-size:13px;font-weight:700">'+esc(r.label)+'</span>'
+      +'<span class="mono" style="font-size:12px;color:'+scoreColor+'">'+r.done+' / '+r.target+'</span>'
+      +'</div>'
+      +'<div class="pw" style="margin-bottom:8px"><div class="'+barCls+'" style="width:'+r.pct+'%"></div></div>'
+      +itemsHtml
+      +'</div>';
+  }).join('');
+}
+
+/* ══ CONFIRM (dengan label tombol dinamis) ══ */
+let _cfCb=null;
+function showConfirm(title,body,cb,btnLabel='Konfirmasi'){
+  document.getElementById('cf-title').textContent=title;
+  document.getElementById('cf-body').textContent=body;
+  document.getElementById('cf-btn').textContent=btnLabel;
+  _cfCb=cb;
+  document.getElementById('cf-btn').onclick=()=>{closeOv('ov-confirm');if(_cfCb)_cfCb()};
+  openOv('ov-confirm');
+}
+
+/* ══ THEME ══ */
+function toggleTheme(){
+  cfg.theme=cfg.theme==='light'?'dark':'light';
+  S.set('cfg',cfg);applyTheme();
+  if(curPage==='settings')renderSettings();
+  toast(cfg.theme==='light'?'Light mode':'Dark mode',cfg.theme==='light'?'light':'dark');
+}
+function applyTheme(){
+  const isLight=cfg.theme==='light';
+  document.documentElement.classList.toggle('light',isLight);
+  const mc=document.getElementById('meta-theme');
+  if(mc)mc.content=isLight?'#f4f4f8':'#080810';
+  const btn=document.getElementById('theme-toggle-btn');
+  if(btn)btn.innerHTML=isLight
+    ?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>'
+    :'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>';
+}
+
+/* ══ EXIT CONFIRM ══ */
+function _showExitConfirm(){
+  // Buat dialog custom (tidak pakai confirm() karena diblokir PWA)
+  const overlay=document.createElement('div');
+  overlay.id='exit-overlay';
+  overlay.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.75);backdrop-filter:blur(8px);display:flex;align-items:flex-end';
+  overlay.innerHTML=`
+    <div style="width:100%;background:var(--s1);border-radius:24px 24px 0 0;border-top:1px solid var(--b2);padding:20px 20px calc(28px + var(--sab));animation:su .28s cubic-bezier(.34,1.3,.64,1)">
+      <div style="width:32px;height:3px;background:var(--b3);border-radius:2px;margin:0 auto 18px"></div>
+      <div style="font-size:18px;font-weight:800;margin-bottom:8px;letter-spacing:-.3px">Keluar dari aplikasi?</div>
+      <div style="font-size:14px;color:var(--t2);line-height:1.65;margin-bottom:20px">Tab ini akan ditutup. Data tersimpan otomatis.</div>
+      <div style="display:flex;gap:10px">
+        <button onclick="document.getElementById('exit-overlay').remove()" style="flex:1;padding:13px;border-radius:var(--rxs);border:1px solid var(--b2);background:var(--s2);color:var(--t1);font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer">Tidak</button>
+        <button onclick="window.close();setTimeout(()=>{document.getElementById('exit-overlay')&&document.getElementById('exit-overlay').remove()},500)" style="flex:1;padding:13px;border-radius:var(--rxs);border:none;background:var(--rd);color:#fff;font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer">Ya, Keluar</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  overlay.addEventListener('click',function(e){if(e.target===overlay)overlay.remove()});
+}
+
+/* ══ INIT ══ */
+(function(){
+  // Bersihkan exit-overlay jika tertinggal dari sesi sebelumnya
+  const oldOverlay=document.getElementById('exit-overlay');
+  if(oldOverlay)oldOverlay.remove();
+  if(!cfg.theme)cfg.theme='dark';
+  applyTheme();
+  updateTopbar('koleksi');renderKol();
+  
+  /* ===== PERBAIKAN SERVICE WORKER ===== */
+  // Hanya register service worker JIKA ini adalah halaman Clips Tracking PWA
+  // Dan batasi scope hanya ke path saat ini (bukan seluruh root)
+  if('serviceWorker' in navigator){
+    // Ambil path saat ini (misal /clips/ atau /)
+    const swScope = window.location.pathname;
+    // Pastikan tidak register SW kalau bukan di halaman ini (tapi gak perlu, karena SW hanya di-register sekali)
+    // Yang penting: unregister SW dari path lain jika ada
+    navigator.serviceWorker.getRegistrations().then(registrations => {
+      for(let reg of registrations){
+        // Jika scope registrasi lebih luas dari path kita (misal scope '/'), unregister
+        if(reg.scope !== window.location.origin + swScope && reg.scope === window.location.origin + '/'){
+          console.log('[SW] Unregister SW dengan scope root:', reg.scope);
+          reg.unregister();
+        }
+      }
+    });
+    
+    // Register SW dengan scope yang tepat
+    navigator.serviceWorker.register('service-worker.js', { scope: './' })
+      .then(reg => { console.log('[SW] Registered, scope:', reg.scope); })
+      .catch(err => { console.warn('[SW] Register gagal:', err); });
+  }
+
+  /* ── Back button handler (Android PWA) ── */
+  let _backReady=false;
+  setTimeout(function(){
+    history.pushState({app:true},'',location.href);
+    _backReady=true;
+  },300);
+  window.addEventListener('popstate',function(e){
+    if(!_backReady)return;
+    // Jika ada overlay/modal/fsm terbuka, tutup dulu
+    const openOvs=Array.from(document.querySelectorAll('.ov.open'));
+    const openFsms=Array.from(document.querySelectorAll('.fsm.open'));
+    if(openOvs.length){
+      const last=openOvs[openOvs.length-1];
+      closeOv(last.id);
+      history.pushState({app:true},'',location.href);
+      return;
+    }
+    if(openFsms.length){
+      const last=openFsms[openFsms.length-1];
+      closeFsm(last.id);
+      history.pushState({app:true},'',location.href);
+      return;
+    }
+
+    // Tidak ada modal terbuka — tampilkan konfirmasi keluar
+    history.pushState({app:true},'',location.href);
+    _showExitConfirm();
+  });
+})();
+</script>
+</body>
+</html>
